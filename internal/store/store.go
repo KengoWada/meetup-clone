@@ -3,12 +3,25 @@ package store
 import (
 	"context"
 	"database/sql"
+	"time"
+
+	"github.com/KengoWada/meetup-clone/internal/models"
 )
 
-type Store struct{}
+const (
+	QueryTimeoutDuration = time.Second * 5
+)
 
-func NewStorage(db *sql.DB) Store {
-	return Store{}
+type Store struct {
+	Users interface {
+		Create(context.Context, *models.User, *models.UserProfile) error
+	}
+}
+
+func NewStore(db *sql.DB) Store {
+	return Store{
+		Users: &UserStore{db},
+	}
 }
 
 func WithTx(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
