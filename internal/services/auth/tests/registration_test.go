@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/KengoWada/meetup-clone/internal/services/auth"
+	"github.com/KengoWada/meetup-clone/internal/app"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,8 +16,9 @@ type H map[string]any
 
 func TestUserRegistration(t *testing.T) {
 	store := utils.NewTestStore(t)
-	authHandler := auth.NewHandler(store)
-	mux := authHandler.RegisterRoutes()
+	app := app.NewTestApplication(store)
+
+	mux := app.Mount()
 
 	t.Run("should create user", func(t *testing.T) {
 		data := H{
@@ -243,7 +244,7 @@ func registerUserHelper(data H, mux http.Handler) (*httptest.ResponseRecorder, H
 		return nil, nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodPost, "/v1/auth/register", bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, nil, err
 	}
