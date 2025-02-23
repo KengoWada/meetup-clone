@@ -6,6 +6,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
+	"github.com/KengoWada/meetup-clone/internal/validate"
 )
 
 type registerUserPayload struct {
@@ -20,7 +21,7 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 	var payload registerUserPayload
 	utils.ReadJSON(w, r, &payload)
 
-	if err := utils.Validate.Struct(payload); err != nil {
+	if err := validate.Validate.Struct(payload); err != nil {
 		errResponse, err := utils.GenerateErrorMessages(err, registerUserPayloadErrors)
 		if err != nil {
 			utils.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error."})
