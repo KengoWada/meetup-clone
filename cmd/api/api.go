@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/KengoWada/meetup-clone/internal/services/auth"
+	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 type application struct {
 	config config
+	store  store.Store
 }
 
 type config struct {
@@ -29,6 +33,18 @@ type dbConfig struct {
 
 func (app *application) mount() http.Handler {
 	mux := chi.NewRouter()
+
+	mux.Use(middleware.RequestID)
+	mux.Use(middleware.RealIP)
+	mux.Use(middleware.Logger)
+	mux.Use(middleware.Timeout(60 * time.Second))
+
+	mux.Route("/v1", func(r chi.Router) {
+		authHandler := auth.NewHandler(app.store)
+		authMux := authHandler.RegisterRoutes()
+		r.Mount("/auth", authMux)
+	})
+
 	return mux
 }
 
