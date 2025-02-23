@@ -3,11 +3,12 @@ package main
 import (
 	"log"
 
+	"github.com/KengoWada/meetup-clone/internal/db"
+	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 )
 
 func main() {
-
 	cfg := config{
 		addr:        utils.GetString("SERVER_ADDR", ""),
 		debug:       utils.GetBool("DEBUG", false),
@@ -21,8 +22,23 @@ func main() {
 		},
 	}
 
+	db, err := db.New(
+		cfg.dbConfig.addr,
+		cfg.dbConfig.maxOpenConns,
+		cfg.dbConfig.maxIdleConns,
+		cfg.dbConfig.maxIdleTime,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	log.Println("connected to db")
+
+	store := store.NewStore(db)
+
 	app := &application{
 		config: cfg,
+		store:  store,
 	}
 
 	mux := app.mount()
