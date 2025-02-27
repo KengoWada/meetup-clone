@@ -29,13 +29,19 @@ touch .env/postgres.env # Only needed if you are using `docker-compose.dev.yml`
 
     # Server environment variables
     export SERVER_ADDR=:8000
-    export SERVER_ENVIRONMENT=dev
+    export SERVER_ENVIRONMENT=dev # dev, test, prod
 
     # Database environment variables
     export DB_ADDR=postgres://<user>:<password>@<host>:<port>/<dbName>?sslmode=disable
     export DB_MAX_OPEN_CONNS=30
     export DB_MAX_IDLE_CONNS=30
     export DB_MAX_IDLE_TIME=15m
+
+    # JWT environment variables
+    export JWT_ISSUER=meetup_clone
+    export JWT_AUDIENCE=meetup_clone
+    export JWT_SECRET_KEY=<secret-key>
+    export JWT_ACCESS_EXP=3
 
     # Test environment variables
     export TEST_DB_ADDR=postgres://<user>:<password>@<host>:<port>/<dbName>_test?sslmode=disable
