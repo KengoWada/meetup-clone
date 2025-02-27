@@ -55,6 +55,42 @@ func (s *UserStore) Activate(ctx context.Context, user *models.User) error {
 	return nil
 }
 
+func (s *UserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	query := `
+		SELECT * FROM users
+		WHERE email = $1 AND is_active = 't' AND deleted_at IS NULL
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	user := models.User{}
+	err := s.db.
+		QueryRowContext(ctx, query, email).
+		Scan(
+			&user.ID,
+			&user.Email,
+			&user.Password,
+			&user.IsActive,
+			&user.Role,
+			&user.PasswordResetToken,
+			&user.Version,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.DeletedAt,
+		)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
+
 func (s *UserStore) createUser(ctx context.Context, tx *sql.Tx, user *models.User) error {
 	query := `
 		INSERT INTO users(email, password, role)
