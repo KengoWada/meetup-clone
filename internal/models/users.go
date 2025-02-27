@@ -24,5 +24,5 @@ type UserProfile struct {
 	ProfilePic  string `json:"profilePic"`
 	DateOfBirth string `json:"dateOfBirth"`
 	UserID      int64  `json:"userId"`
-	User        *User  `json:"json"`
+	User        *User  `json:"user"`
 }
