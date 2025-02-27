@@ -6,19 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/DATA-DOG/go-txdb"
 	"github.com/KengoWada/meetup-clone/internal/store"
-	_ "github.com/lib/pq"
 )
 
-func NewTestStore(t *testing.T) store.Store {
+func NewTestStore(t *testing.T, db *sql.DB) store.Store {
 	t.Helper()
-
-	dbAddr := GetString("TEST_DB_ADDR", "")
-	db := sql.OpenDB(txdb.New("postgres", dbAddr))
-	if db == nil {
-		t.Fatal("failed to connect to test db")
-	}
 
 	tx, err := db.Begin()
 	if err != nil {
