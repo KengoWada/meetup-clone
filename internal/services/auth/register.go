@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
+	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/KengoWada/meetup-clone/internal/validate"
@@ -19,7 +20,11 @@ type registerUserPayload struct {
 
 func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 	var payload registerUserPayload
-	utils.ReadJSON(w, r, &payload)
+	err := utils.ReadJSON(w, r, &payload)
+	if err != nil {
+		response.InternalServerErrorResponse(w, r, err)
+		return
+	}
 
 	if err := validate.Validate.Struct(payload); err != nil {
 		errResponse, err := utils.GenerateErrorMessages(err, registerUserPayloadErrors)
@@ -33,8 +38,7 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 
 	passwordHash, err := utils.GeneratePasswordHash(payload.Password)
 	if err != nil {
-		// TODO: Add logging
-		utils.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error."})
+		response.InternalServerErrorResponse(w, r, err)
 		return
 	}
 
@@ -49,15 +53,23 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 		DateOfBirth: payload.DateOfBirth,
 	}
 
-	err = h.store.Users.Create(r.Context(), user, userProfile)
+	ctx := r.Context()
+
+	err = h.store.Users.Create(ctx, user, userProfile)
 	if err != nil {
+		errorMessage := response.ErrorResponse{Message: "Invalid request body"}
+
 		switch err {
 		case store.ErrDuplicateEmail:
-			utils.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			errorMessage.Errors = response.Errors{"email": err.Error()}
+			response.BadRequestErrorResponse(w, r, err, errorMessage)
+
 		case store.ErrDuplicateUsername:
-			utils.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			errorMessage.Errors = response.Errors{"username": err.Error()}
+			response.BadRequestErrorResponse(w, r, err, errorMessage)
+
 		default:
-			utils.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error."})
+			response.InternalServerErrorResponse(w, r, err)
 		}
 		return
 	}
