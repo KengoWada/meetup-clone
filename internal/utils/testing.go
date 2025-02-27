@@ -25,9 +25,9 @@ func NewTestStore(t *testing.T, db *sql.DB) store.Store {
 	return store.NewStore(db)
 }
 
-func ExecuteRequest(req *http.Request, mux http.Handler) *httptest.ResponseRecorder {
-	rr := httptest.NewRecorder()
-	mux.ServeHTTP(rr, req)
+func ExecuteRequest(r *http.Request, mux http.Handler) *httptest.ResponseRecorder {
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
 
-	return rr
+	return w
 }
