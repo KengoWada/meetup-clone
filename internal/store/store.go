@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
@@ -11,6 +12,8 @@ import (
 const (
 	QueryTimeoutDuration = time.Second * 5
 )
+
+var ErrNotFound = errors.New("item not found")
 
 type Store struct {
 	Users interface {
