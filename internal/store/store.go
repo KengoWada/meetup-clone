@@ -15,6 +15,8 @@ const (
 type Store struct {
 	Users interface {
 		Create(context.Context, *models.User, *models.UserProfile) error
+		Activate(context.Context, *models.User) error
+		GetByEmail(ctx context.Context, email string) (*models.User, error)
 	}
 }
 
