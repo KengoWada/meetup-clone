@@ -10,11 +10,12 @@ const (
 
 type User struct {
 	BaseModel
-	Email              string   `json:"email"`
-	Password           string   `json:"-"`
-	IsActive           bool     `json:"-"`
-	Role               UserRole `json:"role"`
-	PasswordResetToken string   `json:"-"`
+	Email              string       `json:"email"`
+	Password           string       `json:"-"`
+	IsActive           bool         `json:"-"`
+	Role               UserRole     `json:"role"`
+	PasswordResetToken string       `json:"-"`
+	UserProfile        *UserProfile `json:"userProfile"`
 }
 
 type UserProfile struct {
