@@ -15,10 +15,13 @@ import (
 type H map[string]any
 
 func TestUserRegistration(t *testing.T) {
-	store := utils.NewTestStore(t)
-	app := app.NewTestApplication(store)
+	appItems, err := app.NewApplication()
+	if err != nil {
+		t.Fatal(err)
+	}
+	appItems.App.Store = utils.NewTestStore(t, appItems.DB)
 
-	mux := app.Mount()
+	mux := appItems.App.Mount()
 
 	t.Run("should create user", func(t *testing.T) {
 		data := H{
@@ -59,10 +62,18 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		var errorMessage string = "an account is already attached to that email address"
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["error"])
+
+		errorMessages, ok := response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
+
+		var emailErrorMessage = "an account is already attached to that email address"
+		var responseMessage = "Invalid request body"
+
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, emailErrorMessage, errorMessages["email"])
 	})
 
 	t.Run("should not create user with same username twice", func(t *testing.T) {
@@ -87,10 +98,18 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		var errorMessage string = "username is already taken"
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["error"])
+
+		errorMessages, ok := response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
+
+		var usernameErrorMessage = "username is already taken"
+		var responseMessage = "Invalid request body"
+
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, usernameErrorMessage, errorMessages["username"])
 	})
 
 	t.Run("should not create user invalid date of birth", func(t *testing.T) {
@@ -106,10 +125,18 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+		errorMessages, ok := response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
 
 		var errorMessage string = "Invalid date format. mm/dd/yyyy"
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["dateOfBirth"])
+		var responseMessage = "Invalid request body"
+
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["dateOfBirth"])
 	})
 
 	t.Run("should not create user invalid password", func(t *testing.T) {
@@ -126,10 +153,18 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+		errorMessages, ok := response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
 
 		var errorMessage string = "Password must have at least 10 characters"
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["password"])
+		var responseMessage = "Invalid request body"
+
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["password"])
 
 		// Password more than 72 characters
 		var veryLongPassword string
@@ -142,10 +177,16 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+		errorMessages, ok = response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
 
 		errorMessage = "Password must have at most 72 characters"
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["password"])
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["password"])
 
 		// Password missing upper case character
 		data["password"] = "n3w_p@ssw0rd"
@@ -153,10 +194,16 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+		errorMessages, ok = response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
 
 		errorMessage = "Password must contain a number, lower case character, upper case character and one of the special symbols(including space) !@#$%^&*()-_+=,.?|\\/<>[]{}"
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["password"])
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["password"])
 
 		// Password missing lower case character
 		data["password"] = "N3W_P@SSW0RD"
@@ -165,7 +212,13 @@ func TestUserRegistration(t *testing.T) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["password"])
+
+		errorMessages, ok = response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["password"])
 
 		// Password missing number character
 		data["password"] = "NeW_P@SSWoRD"
@@ -174,7 +227,13 @@ func TestUserRegistration(t *testing.T) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["password"])
+
+		errorMessages, ok = response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["password"])
 
 		// Password missing special character
 		data["password"] = "N3WPaSSW0RD"
@@ -183,7 +242,13 @@ func TestUserRegistration(t *testing.T) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["password"])
+
+		errorMessages, ok = response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["password"])
 	})
 
 	t.Run("should not create user invalid email", func(t *testing.T) {
@@ -200,10 +265,18 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		var errorMessage string = "Invalid email address provided"
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["email"])
+
+		errorMessages, ok := response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
+
+		var errorMessage = "Invalid email address provided"
+		var responseMessage = "Invalid request body"
+
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["email"])
 
 		// Email field missing
 		delete(data, "email")
@@ -211,10 +284,16 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+		errorMessages, ok = response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
 
 		errorMessage = "Field is required"
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["email"])
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["email"])
 	})
 
 	t.Run("should not create user with invalid profile pic", func(t *testing.T) {
@@ -231,10 +310,18 @@ func TestUserRegistration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		var errorMessage string = "Invalid URL format"
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, errorMessage, response["profilePic"])
+
+		errorMessages, ok := response["errors"].(map[string]any)
+		if !ok {
+			t.Fatal("failed to convert response errors to map")
+		}
+
+		var errorMessage = "Invalid URL format"
+		var responseMessage = "Invalid request body"
+
+		assert.Equal(t, responseMessage, response["message"])
+		assert.Equal(t, errorMessage, errorMessages["profilePic"])
 	})
 }
 
