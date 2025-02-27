@@ -1,19 +1,19 @@
 package main
 
 import (
-	"log"
-
 	"github.com/KengoWada/meetup-clone/internal/app"
+	"github.com/KengoWada/meetup-clone/internal/logger"
 )
 
 func main() {
-	app, deferItems, err := app.NewApplication()
+	log := logger.Get()
+	appItems, err := app.NewApplication()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("Failed to create application")
 	}
 
-	defer deferItems.DB.Close()
+	defer appItems.DB.Close()
 
-	mux := app.Mount()
-	log.Fatal(app.Run(mux))
+	mux := appItems.App.Mount()
+	log.Fatal().Err(appItems.App.Run(mux)).Msg("Server has stopped")
 }
