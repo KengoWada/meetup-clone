@@ -1,10 +1,11 @@
 package app
 
 import (
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/KengoWada/meetup-clone/internal/logger"
+	appMiddleware "github.com/KengoWada/meetup-clone/internal/middleware"
 	"github.com/KengoWada/meetup-clone/internal/services/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,11 +16,12 @@ func (app *Application) Mount() http.Handler {
 
 	mux.Use(middleware.RequestID)
 	mux.Use(middleware.RealIP)
-	mux.Use(middleware.Logger)
+	mux.Use(appMiddleware.LoggerMiddleware)
+	mux.Use(middleware.Recoverer)
 	mux.Use(middleware.Timeout(60 * time.Second))
 
 	mux.Route("/v1", func(r chi.Router) {
-		authHandler := auth.NewHandler(app.Store)
+		authHandler := auth.NewHandler(app.Store, app.Config, app.Authenticator)
 		authMux := authHandler.RegisterRoutes()
 		r.Mount("/auth", authMux)
 	})
@@ -36,6 +38,8 @@ func (app *Application) Run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("server is starting on port %s", app.Config.Addr)
+	l := logger.Get()
+
+	l.Info().Msgf("server is starting on port %s", app.Config.Addr)
 	return svr.ListenAndServe()
 }

@@ -2,78 +2,54 @@ package app
 
 import (
 	"database/sql"
-	"slices"
 
+	"github.com/KengoWada/meetup-clone/internal/auth"
+	"github.com/KengoWada/meetup-clone/internal/config"
 	"github.com/KengoWada/meetup-clone/internal/db"
 	"github.com/KengoWada/meetup-clone/internal/store"
-	"github.com/KengoWada/meetup-clone/internal/utils"
-)
-
-var (
-	environments = []string{"dev", "prod"}
 )
 
 type Application struct {
-	Config Config
-	Store  store.Store
+	Config        config.Config
+	Store         store.Store
+	Authenticator auth.Authenticator
 }
 
-type DeferItems struct {
-	DB *sql.DB
+type AppItems struct {
+	App *Application
+	DB  *sql.DB
 }
 
-func NewApplication() (*Application, DeferItems, error) {
-	environment := utils.GetString("SERVER_ENVIRONMENT", "prod")
-	if !slices.Contains(environments, environment) {
-		environment = "prod"
-	}
+func NewApplication() (*AppItems, error) {
+	cfg := config.NewConfig()
 
-	cfg := Config{
-		Addr:        utils.GetString("SERVER_ADDR", ""),
-		Debug:       utils.GetBool("DEBUG", false),
-		Environment: environment,
-		FrontendURL: utils.GetString("FRONTEND_URL", ""),
-		DBConfig: DBConfig{
-			Addr:         utils.GetString("DB_ADDR", ""),
-			MaxOpenConns: utils.GetInt("DB_MAX_OPEN_CONNS", 30),
-			MaxIdleConns: utils.GetInt("DB_MAX_IDLE_CONNS", 30),
-			MaxIdleTime:  utils.GetString("DB_MAX_IDLE_TIME", "15m"),
-		},
-	}
+	appItems := &AppItems{}
+
+	// Make database connection
 	db, err := db.New(
 		cfg.DBConfig.Addr,
 		cfg.DBConfig.MaxOpenConns,
 		cfg.DBConfig.MaxIdleConns,
 		cfg.DBConfig.MaxIdleTime,
+		cfg.Environment,
 	)
 	if err != nil {
-		return nil, DeferItems{}, err
+		return appItems, err
 	}
+	appItems.DB = db
 
+	// Create JWT Authenticator
+	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.AuthConfig.Secret, cfg.AuthConfig.Audience, cfg.AuthConfig.Issuer)
+
+	// Create Global App Store
 	store := store.NewStore(db)
 
-	deferItems := DeferItems{
-		DB: db,
-	}
-
 	app := &Application{
-		Config: cfg,
-		Store:  store,
+		Config:        cfg,
+		Store:         store,
+		Authenticator: jwtAuthenticator,
 	}
-	return app, deferItems, nil
-}
+	appItems.App = app
 
-func NewTestApplication(store store.Store) *Application {
-	cfg := Config{
-		Addr:        utils.GetString("SERVER_ADDR", ""),
-		Debug:       utils.GetBool("DEBUG", false),
-		Environment: "test",
-		FrontendURL: utils.GetString("FRONTEND_URL", ""),
-	}
-
-	app := &Application{
-		Config: cfg,
-		Store:  store,
-	}
-	return app
+	return appItems, nil
 }
