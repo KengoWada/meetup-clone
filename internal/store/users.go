@@ -32,6 +32,29 @@ func (s *UserStore) Create(ctx context.Context, user *models.User, userProfile *
 	})
 }
 
+func (s *UserStore) Activate(ctx context.Context, user *models.User) error {
+	query := `
+		UPDATE users
+		SET is_active = 't', version = version + 1
+		WHERE id = $1 AND version = $2
+		RETURNING version, is_active, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(ctx, query, user.ID, user.Version).Scan(&user.Version, &user.IsActive, &user.UpdatedAt)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *UserStore) createUser(ctx context.Context, tx *sql.Tx, user *models.User) error {
 	query := `
 		INSERT INTO users(email, password, role)
