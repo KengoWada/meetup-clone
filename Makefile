@@ -36,11 +36,11 @@ services-kill:
 
 .PHONY: test
 test:
-	@go test -v ./...
+	@SERVER_ENVIRONMENT=test go test -v ./...
 
 .PHONY: test-cov
 test-cov:
-	@go test -v -coverprofile=coverage.out/cov.out ./... && go tool cover -html=coverage.out/cov.out -o=coverage.out/index.html
+	@SERVER_ENVIRONMENT=test go test -v -coverprofile=coverage.out/cov.out ./... && go tool cover -html=coverage.out/cov.out -o=coverage.out/index.html
 
 .PHONY: test-migrate-up
 test-migrate-up:
