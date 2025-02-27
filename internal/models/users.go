@@ -15,7 +15,7 @@ type User struct {
 	IsActive           bool         `json:"-"`
 	Role               UserRole     `json:"role"`
 	PasswordResetToken string       `json:"-"`
-	UserProfile        *UserProfile `json:"userProfile"`
+	UserProfile        *UserProfile `json:"userProfile,omitempty"`
 }
 
 type UserProfile struct {
@@ -24,5 +24,5 @@ type UserProfile struct {
 	ProfilePic  string `json:"profilePic"`
 	DateOfBirth string `json:"dateOfBirth"`
 	UserID      int64  `json:"userId"`
-	User        *User  `json:"user"`
+	User        *User  `json:"user,omitempty"`
 }
