@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -22,14 +23,25 @@ func TestUserRegistration(t *testing.T) {
 	appItems.App.Store = testutils.NewTestStore(t, appItems.DB)
 
 	mux := appItems.App.Mount()
+	ctx := context.Background()
+
+	createTestUser := func(activate bool) testutils.CreateTestUserData {
+		testUserData := testutils.NewCreateTestUserData(activate)
+		_, _, err := testUserData.CreateTestUser(ctx, appItems.App.Store)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return testUserData
+	}
 
 	t.Run("should create user", func(t *testing.T) {
+		email, username := testutils.GenerateEmailAndUsername()
 		data := H{
-			"email":       "one@email.com",
-			"password":    "C0mpl3x_P@ssw0rD",
-			"username":    "username",
-			"profilePic":  "https://github.com/image.png",
-			"dateOfBirth": "08/21/1997",
+			"email":       email,
+			"password":    testutils.TestPassword,
+			"username":    username,
+			"profilePic":  testutils.TestProfilePic,
+			"dateOfBirth": testutils.GenerateDate(),
 		}
 		rr, response, err := registerUserHelper(data, mux)
 		if err != nil {
@@ -41,24 +53,18 @@ func TestUserRegistration(t *testing.T) {
 	})
 
 	t.Run("should not create user with same email twice", func(t *testing.T) {
+		testUserData := createTestUser(true)
+		_, newUsername := testutils.GenerateEmailAndUsername()
+
 		data := H{
-			"email":       "two@email.com",
-			"password":    "C0mpl3x_P@ssw0rD",
-			"username":    "username1",
-			"profilePic":  "https://github.com/image.png",
-			"dateOfBirth": "08/21/1997",
+			"email":       testUserData.Email,
+			"password":    testUserData.Password,
+			"username":    newUsername,
+			"profilePic":  testutils.TestProfilePic,
+			"dateOfBirth": testutils.GenerateDate(),
 		}
 
 		rr, response, err := registerUserHelper(data, mux)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		assert.Equal(t, http.StatusCreated, rr.Code)
-		assert.Equal(t, response["message"], "Done.")
-
-		data["username"] = "username2"
-		rr, response, err = registerUserHelper(data, mux)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -77,24 +83,18 @@ func TestUserRegistration(t *testing.T) {
 	})
 
 	t.Run("should not create user with same username twice", func(t *testing.T) {
+		testUserData := createTestUser(true)
+		newEmail, _ := testutils.GenerateEmailAndUsername()
+
 		data := H{
-			"email":       "three@email.com",
-			"password":    "C0mpl3x_P@ssw0rD",
-			"username":    "username3",
-			"profilePic":  "https://github.com/image.png",
-			"dateOfBirth": "08/21/1997",
+			"email":       newEmail,
+			"password":    testUserData.Password,
+			"username":    testUserData.Username,
+			"profilePic":  testutils.TestProfilePic,
+			"dateOfBirth": testutils.GenerateDate(),
 		}
 
 		rr, response, err := registerUserHelper(data, mux)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		assert.Equal(t, http.StatusCreated, rr.Code)
-		assert.Equal(t, response["message"], "Done.")
-
-		data["email"] = "four@email.com"
-		rr, response, err = registerUserHelper(data, mux)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -113,11 +113,12 @@ func TestUserRegistration(t *testing.T) {
 	})
 
 	t.Run("should not create user invalid date of birth", func(t *testing.T) {
+		email, username := testutils.GenerateEmailAndUsername()
 		data := H{
-			"email":       "five@email.com",
-			"password":    "C0mpl3x_P@ssw0rD",
-			"username":    "username4",
-			"profilePic":  "https://github.com/image.png",
+			"email":       email,
+			"password":    testutils.TestPassword,
+			"username":    username,
+			"profilePic":  testutils.TestProfilePic,
 			"dateOfBirth": "21/08/1997",
 		}
 
@@ -140,12 +141,13 @@ func TestUserRegistration(t *testing.T) {
 	})
 
 	t.Run("should not create user invalid password", func(t *testing.T) {
+		email, username := testutils.GenerateEmailAndUsername()
 		data := H{
-			"email":       "five@email.com",
+			"email":       email,
 			"password":    "simple",
-			"username":    "username5",
-			"profilePic":  "https://github.com/image.png",
-			"dateOfBirth": "21/08/1997",
+			"username":    username,
+			"profilePic":  testutils.TestProfilePic,
+			"dateOfBirth": testutils.GenerateDate(),
 		}
 
 		// Password less than 10 characters
@@ -252,12 +254,13 @@ func TestUserRegistration(t *testing.T) {
 	})
 
 	t.Run("should not create user invalid email", func(t *testing.T) {
+		_, username := testutils.GenerateEmailAndUsername()
 		data := H{
 			"email":       "sixemail.com",
-			"password":    "C0mpl3x_P@ssw0rD",
-			"username":    "username6",
-			"profilePic":  "https://github.com/image.png",
-			"dateOfBirth": "21/08/1997",
+			"password":    testutils.TestPassword,
+			"username":    username,
+			"profilePic":  testutils.TestProfilePic,
+			"dateOfBirth": testutils.GenerateDate(),
 		}
 
 		// Invalid email
@@ -297,12 +300,13 @@ func TestUserRegistration(t *testing.T) {
 	})
 
 	t.Run("should not create user with invalid profile pic", func(t *testing.T) {
+		email, username := testutils.GenerateEmailAndUsername()
 		data := H{
-			"email":       "sixemail.com",
-			"password":    "C0mpl3x_P@ssw0rD",
-			"username":    "username6",
-			"profilePic":  "/github/image.png",
-			"dateOfBirth": "21/08/1997",
+			"email":       email,
+			"password":    testutils.TestPassword,
+			"username":    username,
+			"profilePic":  "/fake/image.png",
+			"dateOfBirth": testutils.GenerateDate(),
 		}
 
 		// Invalid email
