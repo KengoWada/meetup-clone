@@ -2,10 +2,19 @@ package testutils
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
+	"github.com/go-faker/faker/v4"
+	"github.com/go-faker/faker/v4/pkg/options"
+)
+
+var (
+	TestPassword   = "C0mpl3x_P@ssw0rD"
+	TestProfilePic = "https://fake.link.org/pfp.png"
 )
 
 type CreateTestUserData struct {
@@ -15,17 +24,28 @@ type CreateTestUserData struct {
 	Activate bool
 }
 
-func CreateTestUser(ctx context.Context, store store.Store, data CreateTestUserData) (*models.User, *models.UserProfile, error) {
-	passwordHash, err := utils.GeneratePasswordHash(data.Password)
+func NewCreateTestUserData(activate bool) CreateTestUserData {
+	email, username := GenerateEmailAndUsername()
+
+	return CreateTestUserData{
+		Email:    email,
+		Username: username,
+		Password: TestPassword,
+		Activate: activate,
+	}
+}
+
+func (c CreateTestUserData) CreateTestUser(ctx context.Context, store store.Store) (*models.User, *models.UserProfile, error) {
+	passwordHash, err := utils.GeneratePasswordHash(c.Password)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	user := models.User{Email: data.Email, Password: passwordHash}
+	user := models.User{Email: c.Email, Password: passwordHash}
 	userProfile := models.UserProfile{
-		Username:    data.Username,
-		ProfilePic:  "https://fake.img.com/user.png",
-		DateOfBirth: "01/23/1999",
+		Username:    c.Username,
+		ProfilePic:  TestProfilePic,
+		DateOfBirth: GenerateDate(),
 	}
 
 	err = store.Users.Create(ctx, &user, &userProfile)
@@ -33,7 +53,7 @@ func CreateTestUser(ctx context.Context, store store.Store, data CreateTestUserD
 		return nil, nil, err
 	}
 
-	if data.Activate {
+	if c.Activate {
 		err := store.Users.Activate(ctx, &user)
 		if err != nil {
 			return nil, nil, err
@@ -41,4 +61,15 @@ func CreateTestUser(ctx context.Context, store store.Store, data CreateTestUserD
 	}
 
 	return &user, &userProfile, nil
+}
+
+func GenerateDate() string {
+	date := strings.Split(faker.Date(), "-")
+	return fmt.Sprintf("%s/%s/%s", date[1], date[2], date[0])
+}
+
+func GenerateEmailAndUsername() (email string, username string) {
+	name := faker.Username(options.WithGenerateUniqueValues(true))
+
+	return name + "@clone.meetup.org", name
 }
