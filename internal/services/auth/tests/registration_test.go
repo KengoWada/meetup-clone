@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/KengoWada/meetup-clone/internal/app"
-	"github.com/KengoWada/meetup-clone/internal/utils"
+	"github.com/KengoWada/meetup-clone/internal/utils/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func TestUserRegistration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	appItems.App.Store = utils.NewTestStore(t, appItems.DB)
+	appItems.App.Store = testutils.NewTestStore(t, appItems.DB)
 
 	mux := appItems.App.Mount()
 
@@ -337,7 +337,7 @@ func registerUserHelper(data H, mux http.Handler) (*httptest.ResponseRecorder, H
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	rr := utils.ExecuteRequest(req, mux)
+	rr := testutils.ExecuteRequest(req, mux)
 	resp := H{}
 
 	err = json.Unmarshal(rr.Body.Bytes(), &resp)
