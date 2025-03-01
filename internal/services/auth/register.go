@@ -14,10 +14,23 @@ type registerUserPayload struct {
 	Email       string `json:"email" validate:"required,email"`
 	Password    string `json:"password" validate:"required,min=10,max=72,is_password"`
 	Username    string `json:"username" validate:"required,min=3,max=100"`
-	ProfilePic  string `json:"profilePic" validate:"required,http_url"`
-	DateOfBirth string `json:"dateOfBirth" validate:"required,is_date"`
+	ProfilePic  string `json:"profilePic" validate:"required,http_url" example:"https://fake.link/img.png"`
+	DateOfBirth string `json:"dateOfBirth" validate:"required,is_date" example:"mm/dd/yyyy"`
 }
 
+// RegisterUser godoc
+//
+//	@Summary		Register a user
+//	@Description	Register a user
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		registerUserPayload	true	"register user payload"
+//	@Success		201		{object}	response.DocsSuccessResponseRegisterUser
+//	@Failure		400		{object}	response.DocsErrorResponse
+//	@Failure		500		{object}	response.DocsErrorResponseInternalServerErr
+//	@Security
+//	@Router	/auth/register [post]
 func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 	var payload registerUserPayload
 	err := utils.ReadJSON(w, r, &payload)

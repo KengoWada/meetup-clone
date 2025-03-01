@@ -22,6 +22,7 @@ type Config struct {
 	Debug       bool
 	Environment AppEnv
 	FrontendURL string
+	ApiURL      string
 	LogLevel    int
 	SecretKey   string
 	DBConfig    DBConfig
@@ -58,6 +59,7 @@ func NewConfig() Config {
 		Debug:       utils.GetBool("DEBUG", false),
 		Environment: environment,
 		FrontendURL: utils.GetString("FRONTEND_URL", ""),
+		ApiURL:      utils.GetString("API_URL", ""),
 		LogLevel:    utils.GetInt("LOG_LEVEL", int(zerolog.InfoLevel)),
 		SecretKey:   utils.GetString("SECRET_KEY", ""),
 		DBConfig: DBConfig{

@@ -1,0 +1,150 @@
+basePath: /v1
+definitions:
+  auth.loginUserPayload:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.registerUserPayload:
+    properties:
+      dateOfBirth:
+        example: mm/dd/yyyy
+        type: string
+      email:
+        type: string
+      password:
+        maxLength: 72
+        minLength: 10
+        type: string
+      profilePic:
+        example: https://fake.link/img.png
+        type: string
+      username:
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - dateOfBirth
+    - email
+    - password
+    - profilePic
+    - username
+    type: object
+  response.DocsErrorResponse:
+    properties:
+      errors:
+        properties:
+          fieldName:
+            example: error message
+            type: string
+        type: object
+      message:
+        example: Invalid request body
+        type: string
+    type: object
+  response.DocsErrorResponseInternalServerErr:
+    properties:
+      message:
+        example: internal server error
+        type: string
+    type: object
+  response.DocsSuccessResponseLoginUser:
+    properties:
+      data:
+        properties:
+          token:
+            example: jwt.access.token
+            type: string
+        type: object
+    type: object
+  response.DocsSuccessResponseRegisterUser:
+    properties:
+      message:
+        example: Done.
+        type: string
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API for MeetUp Clone
+  license:
+    name: MIT License
+    url: https://opensource.org/license/mit
+  termsOfService: http://swagger.io/terms/
+  title: MeetUp Clone API
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in a user
+      parameters:
+      - description: log in payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/auth.loginUserPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user successfully logged in
+          schema:
+            $ref: '#/definitions/response.DocsSuccessResponseLoginUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security: []
+      summary: Log in a user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a user
+      parameters:
+      - description: register user payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/auth.registerUserPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.DocsSuccessResponseRegisterUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security: []
+      summary: Register a user
+      tags:
+      - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

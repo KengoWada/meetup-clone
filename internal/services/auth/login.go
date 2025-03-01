@@ -23,6 +23,19 @@ type loginUserPayload struct {
 	Password string `json:"password" validate:"required"`
 }
 
+// LoginUser godoc
+//
+//	@Summary		Log in a user
+//	@Description	Log in a user
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		loginUserPayload						true	"log in payload"
+//	@Success		200		{object}	response.DocsSuccessResponseLoginUser	"user successfully logged in"
+//	@Failure		400		{object}	response.DocsErrorResponse
+//	@Failure		500		{object}	response.DocsErrorResponseInternalServerErr
+//	@Security
+//	@Router	/auth/login [post]
 func (h *Handler) loginUser(w http.ResponseWriter, r *http.Request) {
 	var payload loginUserPayload
 	err := utils.ReadJSON(w, r, &payload)
