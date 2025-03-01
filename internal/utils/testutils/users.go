@@ -98,7 +98,7 @@ func NewTestUserData(activate bool) TestUserData {
 //	    log.Fatal(err)
 //	}
 //	fmt.Println("User created:", user, "Profile created:", profile)
-func (c TestUserData) CreateTestUser(ctx context.Context, store store.Store) (*models.User, *models.UserProfile, error) {
+func (c TestUserData) CreateTestUser(ctx context.Context, appStore store.Store) (*models.User, *models.UserProfile, error) {
 	passwordHash, err := utils.GeneratePasswordHash(c.Password)
 	if err != nil {
 		return nil, nil, err
@@ -111,22 +111,47 @@ func (c TestUserData) CreateTestUser(ctx context.Context, store store.Store) (*m
 		DateOfBirth: GenerateDate(),
 	}
 
-	err = store.Users.Create(ctx, &user, &userProfile)
+	err = appStore.Users.Create(ctx, &user, &userProfile)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if c.Activate {
-		timeNow := time.Now().UTC().Format(time.RFC3339)
+		timeNow := time.Now().UTC().Format(store.DateTimeFormat)
 		user.ActivatedAt = &timeNow
 
-		err := store.Users.Activate(ctx, &user)
+		err := appStore.Users.Activate(ctx, &user)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
 	return &user, &userProfile, nil
+}
+
+// CreateDeactivatedTestUser creates a new user with a deactivated state for testing purposes.
+// The user is created with the specified details, and the `IsActive` field is set to `false`.
+// The `ActivatedAt` field is set to `time.Now()` to simulate a deactivated user.
+//
+// Parameters:
+//   - ctx (context.Context): The context for managing cancellation and deadlines.
+//   - store (store.Store): The store object that handles the interaction with the database.
+//
+// Returns:
+//   - *models.User: The created user object with the deactivated state.
+//   - error: An error if the user creation fails, or nil if the creation is successful.
+func (c TestUserData) CreateDeactivatedTestUser(ctx context.Context, store store.Store) (*models.User, error) {
+	user, _, err := c.CreateTestUser(ctx, store)
+	if err != nil {
+		return nil, err
+	}
+
+	err = store.Users.Deactivate(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // GenerateDate generates a random date in the format "mm/dd/yyyy" using the faker package.
