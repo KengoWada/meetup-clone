@@ -46,7 +46,7 @@ type CreateTestUserData struct {
 	Activate bool
 }
 
-// NewCreateTestUserData generates a new instance of CreateTestUserData with a random email,
+// NewTestUserData generates a new instance of CreateTestUserData with a random email,
 // username, a predefined test password, and an activation status based on the `activate` argument.
 //
 // This function utilizes the `GenerateEmailAndUsername` function to generate a unique email
@@ -62,9 +62,9 @@ type CreateTestUserData struct {
 //
 // Example usage:
 //
-//	userData := NewCreateTestUserData(true)
+//	userData := NewTestUserData(true)
 //	fmt.Println(userData.Email, userData.Username, userData.Activate)
-func NewCreateTestUserData(activate bool) CreateTestUserData {
+func NewTestUserData(activate bool) CreateTestUserData {
 	email, username := GenerateEmailAndUsername()
 
 	return CreateTestUserData{
@@ -92,7 +92,7 @@ func NewCreateTestUserData(activate bool) CreateTestUserData {
 //
 // Example usage:
 //
-//	userData := NewCreateTestUserData(true)
+//	userData := NewTestUserData(true)
 //	user, profile, err := userData.CreateTestUser(ctx, store)
 //	if err != nil {
 //	    log.Fatal(err)

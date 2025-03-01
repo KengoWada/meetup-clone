@@ -24,7 +24,7 @@ func TestLoginUser(t *testing.T) {
 	ctx := context.Background()
 
 	createTestUser := func(activate bool) testutils.CreateTestUserData {
-		testUserData := testutils.NewCreateTestUserData(activate)
+		testUserData := testutils.NewTestUserData(activate)
 		_, _, err := testUserData.CreateTestUser(ctx, appItems.App.Store)
 		if err != nil {
 			t.Fatal(err)
