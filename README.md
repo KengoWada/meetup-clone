@@ -26,10 +26,13 @@ touch .env/postgres.env # Only needed if you are using `docker-compose.dev.yml`
     # App environment variables
     export DEBUG=true
     export FRONTEND_URL=http://localhost:3000
+    # should match SERVER_ADDR
+    export API_URL=localhost:8000
+    export SECRET_KEY=<secret-key>
 
     # Server environment variables
     export SERVER_ADDR=:8000
-    export SERVER_ENVIRONMENT=dev # dev, test, prod
+    export SERVER_ENVIRONMENT=dev
 
     # Database environment variables
     export DB_ADDR=postgres://<user>:<password>@<host>:<port>/<dbName>?sslmode=disable
@@ -40,7 +43,7 @@ touch .env/postgres.env # Only needed if you are using `docker-compose.dev.yml`
     # JWT environment variables
     export JWT_ISSUER=meetup_clone
     export JWT_AUDIENCE=meetup_clone
-    export JWT_SECRET_KEY=<secret-key>
+    export JWT_SECRET_KEY=<jwt-secret-key>
     export JWT_ACCESS_EXP=3
 
     # Test environment variables
