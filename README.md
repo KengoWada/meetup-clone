@@ -26,12 +26,13 @@ touch .env/postgres.env # Only needed if you are using `docker-compose.dev.yml`
     # App environment variables
     export DEBUG=true
     export FRONTEND_URL=http://localhost:3000
-    # should match SERVER_ADDR
+    # API_URL should match SERVER_ADDR
     export API_URL=localhost:8000
     export SECRET_KEY=<secret-key>
 
     # Server environment variables
     export SERVER_ADDR=:8000
+    # SERVER_ENVIRONMENT: dev, test, prod
     export SERVER_ENVIRONMENT=dev
 
     # Database environment variables
