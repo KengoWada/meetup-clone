@@ -12,7 +12,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var errInvalidPassword = errors.New("invalid password provided")
+var (
+	errInvalidPassword         = errors.New("invalid password provided")
+	errEmailNotVerified        = errors.New("email not verified")
+	errDeactivatedAccountLogin = errors.New("log in attempt on a deactivated account")
+)
 
 type loginUserPayload struct {
 	Email    string `json:"email" validate:"required"`
@@ -24,23 +28,20 @@ func (h *Handler) loginUser(w http.ResponseWriter, r *http.Request) {
 	err := utils.ReadJSON(w, r, &payload)
 	if err != nil {
 		if strings.Contains(err.Error(), "json: unknown field") {
-			response.UnknownFieldErrorResponse(w, r, err)
+			response.ErrorResponseUnknownField(w, r, err)
 			return
 		}
-		response.InternalServerErrorResponse(w, r, err)
+		response.ErrorResponseInternalServerErr(w, r, err)
 		return
 	}
 
 	if errResponse, err := utils.ValidatePayload(payload, utils.FieldErrorMessages{}); err != nil {
 		switch err {
 		case utils.ErrFailedValidation:
-			errorMessage := response.ErrorResponse{
-				Message: "Invalid request body",
-				Errors:  errResponse,
-			}
-			response.BadRequestErrorResponse(w, r, err, errorMessage)
+			errorMessage := response.NewValidationErrorResponse(errResponse)
+			response.ErrorResponseBadRequest(w, r, err, errorMessage)
 		default:
-			response.InternalServerErrorResponse(w, r, err)
+			response.ErrorResponseInternalServerErr(w, r, err)
 		}
 		return
 	}
@@ -51,34 +52,32 @@ func (h *Handler) loginUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
-			response.BadRequestErrorResponse(w, r, err, errorMessage)
+			response.ErrorResponseBadRequest(w, r, err, errorMessage)
 		default:
-			response.InternalServerErrorResponse(w, r, err)
+			response.ErrorResponseInternalServerErr(w, r, err)
 		}
 		return
 	}
 
 	if user.IsDeactivated() {
-		err := errors.New("log in attempt on deactivated account")
-		response.BadRequestErrorResponse(w, r, err, errorMessage)
+		response.ErrorResponseBadRequest(w, r, errDeactivatedAccountLogin, errorMessage)
 		return
 	}
 
 	if !user.IsActive {
-		err := errors.New("email not verified")
 		errorMessage := response.ErrorResponse{Message: "Please verify your email address to proceed."}
-		response.UnprocessableEntityErrorResponse(w, r, err, errorMessage)
+		response.ErrorResponseUnprocessableEntity(w, r, errEmailNotVerified, errorMessage)
 		return
 	}
 
 	ok, err := utils.ComparePasswordAndHash(payload.Password, user.Password)
 	if err != nil {
-		response.InternalServerErrorResponse(w, r, err)
+		response.ErrorResponseInternalServerErr(w, r, err)
 		return
 	}
 
 	if !ok {
-		response.BadRequestErrorResponse(w, r, errInvalidPassword, errorMessage)
+		response.ErrorResponseBadRequest(w, r, errInvalidPassword, errorMessage)
 		return
 	}
 
@@ -94,10 +93,10 @@ func (h *Handler) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	token, err := h.authenticator.GenerateToken(claims)
 	if err != nil {
-		response.InternalServerErrorResponse(w, r, err)
+		response.ErrorResponseInternalServerErr(w, r, err)
 		return
 	}
 
-	resp := response.SuccessResponse{Data: map[string]string{"token": token}}
-	utils.WriteJSON(w, http.StatusOK, resp)
+	data := response.Response{"token": token}
+	response.SuccessResponseOK(w, "", data)
 }

@@ -23,30 +23,28 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 	err := utils.ReadJSON(w, r, &payload)
 	if err != nil {
 		if strings.Contains(err.Error(), "json: unknown field") {
-			response.UnknownFieldErrorResponse(w, r, err)
+			response.ErrorResponseUnknownField(w, r, err)
 			return
 		}
-		response.InternalServerErrorResponse(w, r, err)
+		response.ErrorResponseInternalServerErr(w, r, err)
 		return
 	}
 
 	if errResponse, err := utils.ValidatePayload(payload, registerUserPayloadErrors); err != nil {
 		switch err {
 		case utils.ErrFailedValidation:
-			errorMessage := response.ErrorResponse{
-				Message: "Invalid request body",
-				Errors:  errResponse,
-			}
-			response.BadRequestErrorResponse(w, r, err, errorMessage)
+			errorMessage := response.NewValidationErrorResponse(errResponse)
+			response.ErrorResponseBadRequest(w, r, err, errorMessage)
+
 		default:
-			response.InternalServerErrorResponse(w, r, err)
+			response.ErrorResponseInternalServerErr(w, r, err)
 		}
 		return
 	}
 
 	passwordHash, err := utils.GeneratePasswordHash(payload.Password)
 	if err != nil {
-		response.InternalServerErrorResponse(w, r, err)
+		response.ErrorResponseInternalServerErr(w, r, err)
 		return
 	}
 
@@ -65,29 +63,29 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 
 	err = h.store.Users.Create(ctx, user, userProfile)
 	if err != nil {
-		errorMessage := response.ErrorResponse{Message: "Invalid request body"}
+		errorMessage := response.ErrorResponse{Message: response.ValidationErrorMessage}
 
 		switch err {
 		case store.ErrDuplicateEmail:
-			errorMessage.Errors = response.Errors{"email": err.Error()}
-			response.BadRequestErrorResponse(w, r, err, errorMessage)
+			errorMessage.Errors = response.ErrorsResponse{"email": err.Error()}
+			response.ErrorResponseBadRequest(w, r, err, errorMessage)
 
 		case store.ErrDuplicateUsername:
-			errorMessage.Errors = response.Errors{"username": err.Error()}
-			response.BadRequestErrorResponse(w, r, err, errorMessage)
+			errorMessage.Errors = response.ErrorsResponse{"username": err.Error()}
+			response.ErrorResponseBadRequest(w, r, err, errorMessage)
 
 		default:
-			response.InternalServerErrorResponse(w, r, err)
+			response.ErrorResponseInternalServerErr(w, r, err)
 		}
 		return
 	}
 
 	_, err = utils.GenerateToken(user.Email, []byte(h.config.SecretKey))
 	if err != nil {
-		response.InternalServerErrorResponse(w, r, err)
+		response.ErrorResponseInternalServerErr(w, r, err)
 		return
 	}
 	// TODO: Send email to activate account.
 
-	utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "Done."})
+	response.SuccessResponseCreated(w, "Done.", nil)
 }

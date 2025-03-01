@@ -4,24 +4,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/KengoWada/meetup-clone/internal/logger"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/pkg/errors"
 )
 
-var log = logger.Get()
-
-type H map[string]any
-
-type Errors map[string]string
-
-type ErrorResponse struct {
-	Message string `json:"message"`
-	Errors  Errors `json:"errors,omitempty"`
-}
-
-func InternalServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+func ErrorResponseInternalServerErr(w http.ResponseWriter, r *http.Request, err error) {
 	reqID := middleware.GetReqID(r.Context())
 	log.Error().
 		Str("requestID", reqID).
@@ -34,7 +22,7 @@ func InternalServerErrorResponse(w http.ResponseWriter, r *http.Request, err err
 	utils.WriteJSON(w, http.StatusInternalServerError, response)
 }
 
-func BadRequestErrorResponse(w http.ResponseWriter, r *http.Request, err error, response ErrorResponse) {
+func ErrorResponseBadRequest(w http.ResponseWriter, r *http.Request, err error, response ErrorResponse) {
 	reqIDRaw := middleware.GetReqID(r.Context())
 	log.Warn().
 		Str("requestID", reqIDRaw).
@@ -46,7 +34,7 @@ func BadRequestErrorResponse(w http.ResponseWriter, r *http.Request, err error, 
 	utils.WriteJSON(w, http.StatusBadRequest, response)
 }
 
-func UnprocessableEntityErrorResponse(w http.ResponseWriter, r *http.Request, err error, response ErrorResponse) {
+func ErrorResponseUnprocessableEntity(w http.ResponseWriter, r *http.Request, err error, response ErrorResponse) {
 	reqIDRaw := middleware.GetReqID(r.Context())
 	log.Info().
 		Str("requestID", reqIDRaw).
@@ -58,13 +46,13 @@ func UnprocessableEntityErrorResponse(w http.ResponseWriter, r *http.Request, er
 	utils.WriteJSON(w, http.StatusUnprocessableEntity, response)
 }
 
-func UnknownFieldErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+func ErrorResponseUnknownField(w http.ResponseWriter, r *http.Request, err error) {
 	items := strings.Split(err.Error(), " ")
 	fieldName := strings.ReplaceAll(items[len(items)-1], `"`, "")
 	errorResponse := ErrorResponse{
 		Message: "Unknown field in request",
-		Errors:  Errors{fieldName: "unknown field"},
+		Errors:  ErrorsResponse{fieldName: "unknown field"},
 	}
 
-	BadRequestErrorResponse(w, r, err, errorResponse)
+	ErrorResponseBadRequest(w, r, err, errorResponse)
 }

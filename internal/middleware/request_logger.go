@@ -29,7 +29,7 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 					Bytes("debug_stack", debug.Stack()).
 					Msg("log system error")
 
-				response.InternalServerErrorResponse(ww, r, nil)
+				response.ErrorResponseInternalServerErr(ww, r, nil)
 			}
 
 			log.Info().
