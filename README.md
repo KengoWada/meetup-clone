@@ -54,6 +54,8 @@ touch .env/postgres.env # Only needed if you are using `docker-compose.dev.yml`
     POSTGRES_USER=postgres
     POSTGRES_PASSWORD=postgres
     POSTGRES_MULTIPLE_DATABASES=meetup, meetup_test
+    TZ=UTC
+    PGTZ=UTC
     ```
 
 - Start the api services i.e postgres
