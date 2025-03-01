@@ -53,6 +53,19 @@ func (h *Handler) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.IsDeactivated() {
+		err := errors.New("log in attempt on deactivated account")
+		response.BadRequestErrorResponse(w, r, err, errorMessage)
+		return
+	}
+
+	if !user.IsActive {
+		err := errors.New("email not verified")
+		errorMessage := response.ErrorResponse{Message: "Please verify your email address to proceed."}
+		response.UnprocessableEntityErrorResponse(w, r, err, errorMessage)
+		return
+	}
+
 	ok, err := utils.ComparePasswordAndHash(payload.Password, user.Password)
 	if err != nil {
 		response.InternalServerErrorResponse(w, r, err)
