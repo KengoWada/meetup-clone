@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	DateTimeFormat       = time.RFC3339
 	QueryTimeoutDuration = time.Second * 5
 )
 
@@ -26,6 +27,7 @@ type Store struct {
 	Users interface {
 		Create(context.Context, *models.User, *models.UserProfile) error
 		Activate(context.Context, *models.User) error
+		Deactivate(context.Context, *models.User) error
 		GetByEmail(ctx context.Context, email string) (*models.User, error)
 	}
 }

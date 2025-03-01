@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
 )
@@ -75,6 +76,30 @@ func (s *UserStore) Activate(ctx context.Context, user *models.User) error {
 	}
 
 	return nil
+}
+
+// Deactivate deactivates a user by setting the IsActive field to false and
+// optionally updating the ActivatedAt field to indicate when the deactivation occurred.
+// This method assumes the user exists in the database.
+//
+// Parameters:
+//   - ctx (context.Context): The context for managing cancellation and deadlines.
+//   - user (*models.User): The user object to be deactivated.
+//
+// Returns:
+//   - error: An error if the operation fails, or nil if the deactivation was successful.
+func (s *UserStore) Deactivate(ctx context.Context, user *models.User) error {
+	if user.IsDeactivated() {
+		return nil
+	}
+
+	if user.IsActivated() {
+		return s.deactivateActiveUser(ctx, user)
+	}
+
+	timeNow := time.Now().UTC().Format(DateTimeFormat)
+	user.ActivatedAt = &timeNow
+	return s.deactivateInActiveUser(ctx, user)
 }
 
 // GetByEmail retrieves a user from the database by their email address.
@@ -184,6 +209,92 @@ func (s *UserStore) createUserProfile(ctx context.Context, tx *sql.Tx, userProfi
 		switch err.Error() {
 		case `pq: duplicate key value violates unique constraint "user_profiles_username_key"`:
 			return ErrDuplicateUsername
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+// deactivateActiveUser is a private method that deactivates a user if the user is currently active.
+// It sets the IsActive field to false.
+// This method is intended to be used when it's confirmed that the user is already active.
+//
+// Parameters:
+//   - ctx (context.Context): The context for managing cancellation and deadlines.
+//   - user (*models.User): The user object to be deactivated.
+//
+// Returns:
+//   - error: An error if the operation fails, or nil if the deactivation was successful.
+func (s *UserStore) deactivateActiveUser(ctx context.Context, user *models.User) error {
+	query := `
+		UPDATE users
+		SET is_active = 'f', version = version + 1
+		WHERE id = $1 AND version = $2
+		RETURNING version, is_active, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		user.ID,
+		user.Version,
+	).Scan(
+		&user.Version,
+		&user.IsActive,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+// deactivateInActiveUser is a private method that deactivates a user who is not activated.
+// It updates the user's `ActivatedAt` field as it was previously `nil`, and sets the `IsActive` field to `false`.
+// This method is used to deactivate users who are not yet activated.
+//
+// Parameters:
+//   - ctx (context.Context): The context for managing cancellation and deadlines.
+//   - user (*models.User): The user object to be deactivated, whose `ActivatedAt` field will be updated if it was previously `nil`.
+//
+// Returns:
+//   - error: An error if the operation fails, or nil if the deactivation was successful.
+func (s *UserStore) deactivateInActiveUser(ctx context.Context, user *models.User) error {
+	query := `
+		UPDATE users
+		SET is_active = 'f', activated_at = $1 version = version + 1
+		WHERE id = $2 AND version = $3
+		RETURNING version, is_active, activated_at, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		user.ActivatedAt,
+		user.ID,
+		user.Version,
+	).Scan(
+		&user.Version,
+		&user.IsActive,
+		&user.ActivatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
 		default:
 			return err
 		}
