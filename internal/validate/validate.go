@@ -1,3 +1,5 @@
+// Package validate contains custom validation functions that can be used
+// with the validator package to perform complex or application-specific validations.
 package validate
 
 import "github.com/go-playground/validator/v10"
