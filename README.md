@@ -87,6 +87,10 @@ make test-migrate-up
 
 ```sh
 make test
+
+# Tests with coverage
+# Create a coverage.out directory before running tests with coverage
+make test-cov
 ```
 
 - Run server
