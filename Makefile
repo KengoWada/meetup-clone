@@ -53,3 +53,7 @@ test-migrate-down:
 .PHONY: test-migrate-force
 test-migrate-force:
 	@migrate -path $(MIGRATIONS_PATH) -database $(TEST_DB_ADDR) force $(filter-out $@,$(MAKECMDGOALS))
+
+.PHONY: gen-docs
+gen-docs:
+	@swag init -g ./api/main.go -d cmd,internal && swag fmt
