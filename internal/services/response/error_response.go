@@ -44,3 +44,15 @@ func BadRequestErrorResponse(w http.ResponseWriter, r *http.Request, err error, 
 
 	utils.WriteJSON(w, http.StatusBadRequest, response)
 }
+
+func UnprocessableEntityErrorResponse(w http.ResponseWriter, r *http.Request, err error, response ErrorResponse) {
+	reqIDRaw := middleware.GetReqID(r.Context())
+	log.Info().
+		Str("requestID", reqIDRaw).
+		Str("method", r.Method).
+		Str("url", r.URL.Path).
+		Err(errors.Wrap(err, "unprocessable entity")).
+		Msg("Unprocessable Entity")
+
+	utils.WriteJSON(w, http.StatusUnprocessableEntity, response)
+}
