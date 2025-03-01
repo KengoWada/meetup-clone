@@ -32,6 +32,15 @@ func TestLoginUser(t *testing.T) {
 		return testUserData
 	}
 
+	createDeactivatedUser := func() testutils.TestUserData {
+		testUserData := testutils.NewTestUserData(true)
+		_, err := testUserData.CreateDeactivatedTestUser(ctx, appItems.App.Store)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return testUserData
+	}
+
 	t.Run("should log in a user", func(t *testing.T) {
 		testUserData := createTestUser(true)
 		data := H{"email": testUserData.Email, "password": testUserData.Password}
@@ -106,6 +115,20 @@ func TestLoginUser(t *testing.T) {
 	t.Run("should not log in with invalid password", func(t *testing.T) {
 		testUserData := createTestUser(true)
 		data := H{"email": testUserData.Email, "password": "wrong_password"}
+
+		rr, response, err := loginUserHelper(data, mux)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+		var responseMessage = "Invalid credentials"
+		assert.Equal(t, responseMessage, response["message"])
+	})
+
+	t.Run("should not log in a deactivated user", func(t *testing.T) {
+		testUserData := createDeactivatedUser()
+		data := H{"email": testUserData.Email, "password": testUserData.Password}
 
 		rr, response, err := loginUserHelper(data, mux)
 		if err != nil {
