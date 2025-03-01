@@ -13,6 +13,7 @@ type User struct {
 	Email              string       `json:"email"`
 	Password           string       `json:"-"`
 	IsActive           bool         `json:"-"`
+	ActivatedAt        *string      `json:"-"`
 	Role               UserRole     `json:"role"`
 	PasswordResetToken string       `json:"-"`
 	UserProfile        *UserProfile `json:"userProfile,omitempty"`
@@ -25,4 +26,8 @@ type UserProfile struct {
 	DateOfBirth string `json:"dateOfBirth"`
 	UserID      int64  `json:"userId"`
 	User        *User  `json:"user,omitempty"`
+}
+
+func (u User) IsDeactivated() bool {
+	return !u.IsActive && u.ActivatedAt != nil
 }

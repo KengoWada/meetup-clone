@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/store"
@@ -54,6 +55,9 @@ func (c CreateTestUserData) CreateTestUser(ctx context.Context, store store.Stor
 	}
 
 	if c.Activate {
+		timeNow := time.Now().UTC().Format(time.RFC3339)
+		user.ActivatedAt = &timeNow
+
 		err := store.Users.Activate(ctx, &user)
 		if err != nil {
 			return nil, nil, err

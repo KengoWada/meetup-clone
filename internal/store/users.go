@@ -35,14 +35,25 @@ func (s *UserStore) Create(ctx context.Context, user *models.User, userProfile *
 func (s *UserStore) Activate(ctx context.Context, user *models.User) error {
 	query := `
 		UPDATE users
-		SET is_active = 't', version = version + 1
-		WHERE id = $1 AND version = $2
-		RETURNING version, is_active, updated_at
+		SET is_active = 't', activated_at = $1, version = version + 1
+		WHERE id = $2 AND version = $3
+		RETURNING version, is_active, activated_at, updated_at
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	err := s.db.QueryRowContext(ctx, query, user.ID, user.Version).Scan(&user.Version, &user.IsActive, &user.UpdatedAt)
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		user.ActivatedAt,
+		user.ID,
+		user.Version,
+	).Scan(
+		&user.Version,
+		&user.IsActive,
+		&user.ActivatedAt,
+		&user.UpdatedAt,
+	)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -58,7 +69,7 @@ func (s *UserStore) Activate(ctx context.Context, user *models.User) error {
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := `
 		SELECT * FROM users
-		WHERE email = $1 AND is_active = 't' AND deleted_at IS NULL
+		WHERE email = $1 AND deleted_at IS NULL
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -71,6 +82,7 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*models.User,
 			&user.Email,
 			&user.Password,
 			&user.IsActive,
+			&user.ActivatedAt,
 			&user.Role,
 			&user.PasswordResetToken,
 			&user.Version,
@@ -95,7 +107,7 @@ func (s *UserStore) createUser(ctx context.Context, tx *sql.Tx, user *models.Use
 	query := `
 		INSERT INTO users(email, password, role)
 		VALUES($1, $2, $3)
-		RETURNING id, is_active, version, created_at, updated_at, deleted_at
+		RETURNING id, is_active, activated_at, version, created_at, updated_at, deleted_at
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -103,6 +115,7 @@ func (s *UserStore) createUser(ctx context.Context, tx *sql.Tx, user *models.Use
 	err := tx.QueryRowContext(ctx, query, user.Email, user.Password, user.Role).Scan(
 		&user.ID,
 		&user.IsActive,
+		&user.ActivatedAt,
 		&user.Version,
 		&user.CreatedAt,
 		&user.UpdatedAt,

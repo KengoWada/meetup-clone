@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     email citext UNIQUE NOT NULL,
     password TEXT NOT NULL,
     is_active BOOLEAN DEFAULT FALSE,
+    activated_at TIMESTAMP(0) WITH TIME ZONE DEFAULT NULL,
     role VARCHAR(50) NOT NULL,
     password_reset_token VARCHAR(255) DEFAULT '',
     version BIGINT DEFAULT 0,
