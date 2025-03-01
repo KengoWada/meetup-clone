@@ -341,7 +341,7 @@ func registerUserHelper(data H, mux http.Handler) (*httptest.ResponseRecorder, H
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	rr := testutils.ExecuteRequest(req, mux)
+	rr := testutils.ExecuteTestRequest(req, mux)
 	resp := H{}
 
 	err = json.Unmarshal(rr.Body.Bytes(), &resp)

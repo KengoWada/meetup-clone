@@ -53,7 +53,7 @@ func NewTestStore(t *testing.T, db *sql.DB) store.Store {
 	return store.NewStore(db)
 }
 
-// ExecuteRequest simulates an HTTP request to a specified handler and returns the response recorder.
+// ExecuteTestRequest simulates an HTTP request to a specified handler and returns the response recorder.
 // This is useful for testing HTTP endpoints in isolation without needing to spin up a full HTTP server.
 //
 // Parameters:
@@ -71,13 +71,13 @@ func NewTestStore(t *testing.T, db *sql.DB) store.Store {
 //	    mux := http.NewServeMux()
 //	    mux.HandleFunc("/my-endpoint", myHandler) // Register the handler for the endpoint
 //
-//	    respRecorder := ExecuteRequest(req, mux)
+//	    respRecorder := ExecuteTestRequest(req, mux)
 //
 //	    if respRecorder.Code != http.StatusOK {
 //	        t.Errorf("Expected status OK, got %v", respRecorder.Code)
 //	    }
 //	}
-func ExecuteRequest(r *http.Request, mux http.Handler) *httptest.ResponseRecorder {
+func ExecuteTestRequest(r *http.Request, mux http.Handler) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, r)
 
