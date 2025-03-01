@@ -3,8 +3,8 @@ package utils
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -84,8 +84,8 @@ func ValidateToken(token string, key []byte, expiresIn time.Duration) (*TimedTok
 }
 
 func getBlockCipher(key []byte) (cipher.AEAD, error) {
-	md5Hash := md5.Sum(key)
-	keyHash := hex.EncodeToString(md5Hash[:])
+	sha256Hash := sha256.Sum256(key)
+	keyHash := hex.EncodeToString(sha256Hash[:])
 
 	aesBlock, err := aes.NewCipher([]byte(keyHash))
 	if err != nil {
