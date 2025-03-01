@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/services/response"
@@ -21,6 +22,10 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 	var payload registerUserPayload
 	err := utils.ReadJSON(w, r, &payload)
 	if err != nil {
+		if strings.Contains(err.Error(), "json: unknown field") {
+			response.UnknownFieldErrorResponse(w, r, err)
+			return
+		}
 		response.InternalServerErrorResponse(w, r, err)
 		return
 	}
