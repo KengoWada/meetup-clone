@@ -1,3 +1,6 @@
+// Package logger provides a function Get that returns a zerolog.Logger
+// instance for global logging, allowing consistent logging throughout
+// the application.
 package logger
 
 import (
@@ -20,6 +23,10 @@ var (
 	log  zerolog.Logger
 )
 
+// Get returns a singleton instance of the zerolog.Logger.
+// It uses the sync.Once mechanism to ensure that the logger is created only once,
+// regardless of how many times the function is called, providing a global logger
+// instance for consistent logging throughout the application.
 func Get() zerolog.Logger {
 	once.Do(func() {
 		zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
