@@ -1,3 +1,6 @@
+// Package middleware provides a collection of middleware functions
+// that can be used to enhance and modify the behavior of the application,
+// such as handling requests, logging, authentication, and more.
 package middleware
 
 import (
@@ -12,6 +15,10 @@ import (
 
 var log = logger.Get()
 
+// LoggerMiddleware is a middleware function that logs all incoming
+// HTTP requests to the server. It logs details such as the request method,
+// URL, and any relevant data before passing the request to the next handler
+// in the middleware chain.
 func LoggerMiddleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
