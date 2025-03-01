@@ -45,3 +45,10 @@ type UserProfile struct {
 func (u User) IsDeactivated() bool {
 	return !u.IsActive && u.ActivatedAt != nil
 }
+
+// IsActivated checks if the user is activated. It returns true if the
+// user is active (IsActive is true) and the user has an activation timestamp
+// (ActivatedAt is not nil). If either condition is not met, it returns false.
+func (u User) IsActivated() bool {
+	return u.IsActive && u.ActivatedAt != nil
+}
