@@ -1,3 +1,5 @@
+// Package db provides functions for establishing and managing
+// database connections used throughout the application.
 package db
 
 import (
@@ -13,6 +15,9 @@ import (
 
 const PostgresDriver = "postgres"
 
+// New creates a new database connection with the specified parameters.
+// It connects to the database using the provided address, sets the maximum
+// number of open and idle connections, and configures the maximum idle time.
 func New(addr string, maxOpenConns, maxIdleConns int, maxIdleTime string, environment config.AppEnv) (db *sql.DB, err error) {
 	if environment == config.AppEnvTest {
 		db = sql.OpenDB(txdb.New(PostgresDriver, addr))
