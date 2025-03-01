@@ -23,6 +23,7 @@ type Config struct {
 	Environment AppEnv
 	FrontendURL string
 	LogLevel    int
+	SecretKey   string
 	DBConfig    DBConfig
 	AuthConfig  AuthConfig
 }
@@ -58,6 +59,7 @@ func NewConfig() Config {
 		Environment: environment,
 		FrontendURL: utils.GetString("FRONTEND_URL", ""),
 		LogLevel:    utils.GetInt("LOG_LEVEL", int(zerolog.InfoLevel)),
+		SecretKey:   utils.GetString("SECRET_KEY", ""),
 		DBConfig: DBConfig{
 			Addr:         utils.GetString(dbAddr, ""),
 			MaxOpenConns: utils.GetInt("DB_MAX_OPEN_CONNS", 30),
