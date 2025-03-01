@@ -11,6 +11,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+var l = logger.Get()
+
 func (app *Application) Mount() http.Handler {
 	mux := chi.NewRouter()
 
@@ -38,8 +40,6 @@ func (app *Application) Run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	l := logger.Get()
-
-	l.Info().Msgf("server is starting on port %s", app.Config.Addr)
+	l.Info().Msgf("%s_env:server is starting on port %s", app.Config.Environment, app.Config.Addr)
 	return svr.ListenAndServe()
 }

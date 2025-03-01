@@ -36,6 +36,7 @@ func NewApplication() (*AppItems, error) {
 	if err != nil {
 		return appItems, err
 	}
+	l.Info().Msg("successfully connected to postgres")
 	appItems.DB = db
 
 	// Create JWT Authenticator
