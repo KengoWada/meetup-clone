@@ -13,10 +13,18 @@ var (
 	ErrDuplicateUsername = errors.New("username is already taken")
 )
 
+// UserStore provides methods for interacting with the database related to
+// user operations, such as creating, updating, and retrieving users.
+// It encapsulates the database connection and contains methods to perform
+// CRUD operations on the user data.
 type UserStore struct {
 	db *sql.DB
 }
 
+// Create creates a new user and their associated profile in the database.
+// It takes the user and userProfile as input, and inserts the corresponding
+// records into the appropriate tables. If the operation is successful,
+// it returns nil; otherwise, it returns an error.
 func (s *UserStore) Create(ctx context.Context, user *models.User, userProfile *models.UserProfile) error {
 	return WithTx(s.db, ctx, func(tx *sql.Tx) error {
 		if err := s.createUser(ctx, tx, user); err != nil {
@@ -32,6 +40,9 @@ func (s *UserStore) Create(ctx context.Context, user *models.User, userProfile *
 	})
 }
 
+// Activate activates a user account in the database. It updates the user's
+// status to active and sets the activation timestamp. If the operation is
+// successful, it returns nil; otherwise, it returns an error.
 func (s *UserStore) Activate(ctx context.Context, user *models.User) error {
 	query := `
 		UPDATE users
@@ -66,6 +77,9 @@ func (s *UserStore) Activate(ctx context.Context, user *models.User) error {
 	return nil
 }
 
+// GetByEmail retrieves a user from the database by their email address.
+// It returns the user object if a matching user is found, or nil and an error
+// if no user is found or if an issue occurs during the query.
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := `
 		SELECT * FROM users
@@ -103,6 +117,10 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*models.User,
 	return &user, nil
 }
 
+// createUser creates a new user in the database within an active transaction.
+// It inserts the user record into the appropriate table and returns an error
+// if the operation fails. The method ensures the operation is performed
+// within the context of the provided transaction.
 func (s *UserStore) createUser(ctx context.Context, tx *sql.Tx, user *models.User) error {
 	query := `
 		INSERT INTO users(email, password, role)
@@ -134,6 +152,10 @@ func (s *UserStore) createUser(ctx context.Context, tx *sql.Tx, user *models.Use
 	return nil
 }
 
+// createUserProfile creates a new user profile in the database after the
+// user ID has been obtained. It inserts the profile record into the appropriate
+// table and links it to the user. This operation is performed within the context
+// of the provided transaction to ensure atomicity.
 func (s *UserStore) createUserProfile(ctx context.Context, tx *sql.Tx, userProfile *models.UserProfile) error {
 	query := `
 		INSERT INTO user_profiles(username, profile_pic, date_of_birth, user_id)
