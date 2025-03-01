@@ -97,9 +97,9 @@ func TestLoginUser(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Equal(t, http.StatusUnprocessableEntity, rr.Code)
 
-		var responseMessage = "Invalid credentials"
+		var responseMessage = "Please verify your email address to proceed."
 		assert.Equal(t, responseMessage, response["message"])
 	})
 
