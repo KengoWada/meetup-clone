@@ -25,7 +25,7 @@ func TestUserRegistration(t *testing.T) {
 	mux := appItems.App.Mount()
 	ctx := context.Background()
 
-	createTestUser := func(activate bool) testutils.CreateTestUserData {
+	createTestUser := func(activate bool) testutils.TestUserData {
 		testUserData := testutils.NewTestUserData(activate)
 		_, _, err := testUserData.CreateTestUser(ctx, appItems.App.Store)
 		if err != nil {

@@ -18,7 +18,7 @@ var (
 	TestProfilePic = "https://fake.link.org/pfp.png"
 )
 
-// CreateTestUserData holds the data required to create a test user. It is typically used
+// TestUserData holds the data required to create a test user. It is typically used
 // for setting up mock or test user data in unit tests or integration tests.
 //
 // Fields:
@@ -33,20 +33,20 @@ var (
 //
 // Example usage:
 //
-//	testData := CreateTestUserData{
+//	testData := TestUserData{
 //	  Email:    "testuser@example.com",
 //	  Username: "testuser",
 //	  Password: "securePassword123",
 //	  Activate: true,
 //	}
-type CreateTestUserData struct {
+type TestUserData struct {
 	Email    string
 	Username string
 	Password string
 	Activate bool
 }
 
-// NewTestUserData generates a new instance of CreateTestUserData with a random email,
+// NewTestUserData generates a new instance of TestUserData with a random email,
 // username, a predefined test password, and an activation status based on the `activate` argument.
 //
 // This function utilizes the `GenerateEmailAndUsername` function to generate a unique email
@@ -57,17 +57,17 @@ type CreateTestUserData struct {
 //   - activate (bool): A flag indicating whether the user should be activated or not.
 //
 // Returns:
-//   - A `CreateTestUserData` struct populated with the generated email, username, password,
+//   - A `TestUserData` struct populated with the generated email, username, password,
 //     and activation status.
 //
 // Example usage:
 //
 //	userData := NewTestUserData(true)
 //	fmt.Println(userData.Email, userData.Username, userData.Activate)
-func NewTestUserData(activate bool) CreateTestUserData {
+func NewTestUserData(activate bool) TestUserData {
 	email, username := GenerateEmailAndUsername()
 
-	return CreateTestUserData{
+	return TestUserData{
 		Email:    email,
 		Username: username,
 		Password: TestPassword,
@@ -98,7 +98,7 @@ func NewTestUserData(activate bool) CreateTestUserData {
 //	    log.Fatal(err)
 //	}
 //	fmt.Println("User created:", user, "Profile created:", profile)
-func (c CreateTestUserData) CreateTestUser(ctx context.Context, store store.Store) (*models.User, *models.UserProfile, error) {
+func (c TestUserData) CreateTestUser(ctx context.Context, store store.Store) (*models.User, *models.UserProfile, error) {
 	passwordHash, err := utils.GeneratePasswordHash(c.Password)
 	if err != nil {
 		return nil, nil, err
