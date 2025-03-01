@@ -2,6 +2,7 @@ package response
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/KengoWada/meetup-clone/internal/logger"
 	"github.com/KengoWada/meetup-clone/internal/utils"
@@ -55,4 +56,15 @@ func UnprocessableEntityErrorResponse(w http.ResponseWriter, r *http.Request, er
 		Msg("Unprocessable Entity")
 
 	utils.WriteJSON(w, http.StatusUnprocessableEntity, response)
+}
+
+func UnknownFieldErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	items := strings.Split(err.Error(), " ")
+	fieldName := strings.ReplaceAll(items[len(items)-1], `"`, "")
+	errorResponse := ErrorResponse{
+		Message: "Unknown field in request",
+		Errors:  Errors{fieldName: "unknown field"},
+	}
+
+	BadRequestErrorResponse(w, r, err, errorResponse)
 }
