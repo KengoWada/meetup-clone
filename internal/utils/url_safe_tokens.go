@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -154,9 +153,8 @@ func ValidateToken(token string, key []byte, expiresIn time.Duration) (*TimedTok
 //     providing both confidentiality and data integrity.
 func getBlockCipher(key []byte) (cipher.AEAD, error) {
 	sha256Hash := sha256.Sum256(key)
-	keyHash := hex.EncodeToString(sha256Hash[:])
 
-	aesBlock, err := aes.NewCipher([]byte(keyHash))
+	aesBlock, err := aes.NewCipher(sha256Hash[:])
 	if err != nil {
 		return nil, err
 	}
