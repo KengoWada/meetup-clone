@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-// GetString retrieves the value of the specified environment variable as a string.
+// EnvGetString retrieves the value of the specified environment variable as a string.
 // If the environment variable is not set, it returns the provided fallback value.
 // If the fallback value is an empty string, the function will panic.
 //
@@ -19,7 +19,7 @@ import (
 //
 // Returns:
 //   - A string representing the value of the environment variable or the fallback value.
-func GetString(key, fallback string) string {
+func EnvGetString(key, fallback string) string {
 	value, ok := os.LookupEnv(key)
 	if !ok {
 		if fallback == "" {
@@ -32,7 +32,7 @@ func GetString(key, fallback string) string {
 	return value
 }
 
-// GetInt retrieves the value of the specified environment variable as an integer.
+// EnvGetInt retrieves the value of the specified environment variable as an integer.
 // If the environment variable is not set or cannot be converted to an integer,
 // it returns the provided fallback value.
 //
@@ -43,7 +43,7 @@ func GetString(key, fallback string) string {
 //
 // Returns:
 //   - An integer representing the value of the environment variable or the fallback value.
-func GetInt(key string, fallback int) int {
+func EnvGetInt(key string, fallback int) int {
 	value, ok := os.LookupEnv(key)
 	if !ok {
 		return fallback
@@ -57,7 +57,7 @@ func GetInt(key string, fallback int) int {
 	return valueInt
 }
 
-// GetBool retrieves the value of the specified environment variable as a boolean.
+// EnvGetBool retrieves the value of the specified environment variable as a boolean.
 // If the environment variable is not set or cannot be converted to a boolean,
 // it returns the provided fallback value.
 //
@@ -68,7 +68,7 @@ func GetInt(key string, fallback int) int {
 //
 // Returns:
 //   - A boolean representing the value of the environment variable or the fallback value.
-func GetBool(key string, fallback bool) bool {
+func EnvGetBool(key string, fallback bool) bool {
 	value, ok := os.LookupEnv(key)
 	if !ok {
 		return fallback

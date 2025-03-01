@@ -42,7 +42,7 @@ func Get() zerolog.Logger {
 			},
 		}
 
-		appEnv := config.AppEnv(utils.GetString("SERVER_ENVIRONMENT", string(config.AppEnvProd)))
+		appEnv := config.AppEnv(utils.EnvGetString("SERVER_ENVIRONMENT", string(config.AppEnvProd)))
 		if !slices.Contains(config.Environments, appEnv) {
 			appEnv = config.AppEnvProd
 		}
@@ -71,7 +71,7 @@ func Get() zerolog.Logger {
 			}
 		}
 
-		logLevel := utils.GetInt("LOG_LEVEL", int(zerolog.InfoLevel))
+		logLevel := utils.EnvGetInt("LOG_LEVEL", int(zerolog.InfoLevel))
 		if appEnv == config.AppEnvTest {
 			logLevel = int(zerolog.Disabled)
 		}
