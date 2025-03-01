@@ -99,5 +99,7 @@ make test-cov
 - Run server
 
 ```sh
-make runserver
+make gen-docs && make runserver
+# or you can use air
+air
 ```
