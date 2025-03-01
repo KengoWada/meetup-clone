@@ -1,14 +1,14 @@
 package models
 
-// UserRole defines the type for user roles within the application.
-type UserRole string
-
 // Constants representing the different user roles in the application.
 const (
 	UserAdminRole  UserRole = "admin"  // Role for admin users with full privileges.
 	UserStaffRole  UserRole = "staff"  // Role for staff users with limited privileges.
 	UserClientRole UserRole = "client" // Role for client users with basic privileges.
 )
+
+// UserRole defines the type for user roles within the application.
+type UserRole string
 
 // User represents a user in the application, including their credentials,
 // status, role, and profile information. It embeds the BaseModel to include
