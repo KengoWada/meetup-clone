@@ -77,6 +77,11 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = utils.GenerateToken(user.Email, []byte(h.config.SecretKey))
+	if err != nil {
+		response.InternalServerErrorResponse(w, r, err)
+		return
+	}
 	// TODO: Send email to activate account.
 
 	utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "Done."})
