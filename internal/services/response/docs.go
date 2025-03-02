@@ -36,3 +36,10 @@ type DocsSuccessResponseLoginUser struct {
 type DocsSuccessResponseRegisterUser struct {
 	Message string `json:"message" example:"Done."`
 }
+
+// DocsResponseMessageOnly is used by Swagger to show an example of a response
+// containing only a message. This struct is not used in actual code but serves as a reference
+// for API documentation.
+type DocsResponseMessageOnly struct {
+	Message string `json:"message"`
+}
