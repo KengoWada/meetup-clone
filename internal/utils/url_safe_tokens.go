@@ -10,6 +10,8 @@ import (
 	"errors"
 	"io"
 	"time"
+
+	"github.com/KengoWada/meetup-clone/internal/store"
 )
 
 var ErrExpiredToken = errors.New("token has expired")
@@ -52,28 +54,33 @@ type TimedTokenData struct {
 //   - Base64 URL encoding ensures that the token can be safely transmitted over URLs without
 //     any special character issues.
 func GenerateToken(data string, key []byte) (string, error) {
-	gcm, err := getBlockCipher(key)
-	if err != nil {
-		return "", err
-	}
+	return generateToken(data, key, time.Now().UTC().Format(store.DateTimeFormat))
+}
 
-	timedTokenData := TimedTokenData{
-		CreatedAt: time.Now().Format(time.RFC3339),
-		Body:      data,
-	}
-	timedTokenDataStr, err := json.Marshal(timedTokenData)
-	if err != nil {
-		return "", err
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	_, err = io.ReadFull(rand.Reader, nonce)
-	if err != nil {
-		return "", err
-	}
-
-	cipheredText := gcm.Seal(nonce, nonce, timedTokenDataStr, nil)
-	return base64.RawURLEncoding.EncodeToString(cipheredText), nil
+// GenerateTestToken creates an encrypted test token with the provided data and timestamp.
+//
+// This function is a wrapper around `generateToken`, useful for generating tokens in test scenarios.
+// It encrypts the given data and timestamp using AES-GCM and returns a base64 URL-encoded token.
+//
+// Parameters:
+//   - data (string): The data to include in the token.
+//   - key ([]byte): The encryption key (must be 32 bytes long).
+//   - createdAt (string): The timestamp to embed in the token (e.g., time.Now().Format(time.RFC3339)).
+//
+// Returns:
+//   - string: The generated token as a base64 URL-encoded string.
+//   - error: An error if token generation fails.
+//
+// Example usage:
+//
+//	key := []byte("your-32-byte-secret-key-----------------")
+//	token, err := GenerateTestToken("testData", key, "2025-03-01T12:00:00Z")
+//	if err != nil {
+//	    log.Fatalf("Failed to generate test token: %v", err)
+//	}
+//	fmt.Println("Test Token:", token)
+func GenerateTestToken(data string, key []byte, createdAt string) (string, error) {
+	return generateToken(data, key, createdAt)
 }
 
 // ValidateToken validates a given token by decrypting it using the provided key and checks
@@ -160,4 +167,51 @@ func getBlockCipher(key []byte) (cipher.AEAD, error) {
 	}
 
 	return cipher.NewGCM(aesBlock)
+}
+
+// generateToken encrypts the provided data along with a timestamp and returns a base64 URL-encoded string.
+//
+// It uses AES-GCM for encryption with a randomly generated nonce. The function serializes the data and timestamp
+// into a JSON object, encrypts it, and encodes the result in a URL-safe format.
+//
+// Parameters:
+//   - data (string): The data to be included in the token.
+//   - key ([]byte): The encryption key. Must be 32 bytes long for AES-256.
+//   - createdAt (string): The timestamp (e.g., time.Now().Format(time.RFC3339)).
+//
+// Returns:
+//   - string: The base64 URL-encoded encrypted token.
+//   - error: An error if encryption or encoding fails.
+//
+// Example usage:
+//
+//	key := []byte("your-32-byte-secret-key-----------------")
+//	token, err := generateToken("user123", key, time.Now().Format(time.RFC3339))
+//	if err != nil {
+//	    log.Fatalf("Failed to generate token: %v", err)
+//	}
+//	fmt.Println("Generated Token:", token)
+func generateToken(data string, key []byte, createdAt string) (string, error) {
+	gcm, err := getBlockCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	timedTokenData := TimedTokenData{
+		CreatedAt: createdAt,
+		Body:      data,
+	}
+	timedTokenDataStr, err := json.Marshal(timedTokenData)
+	if err != nil {
+		return "", err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+	_, err = io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return "", err
+	}
+
+	cipheredText := gcm.Seal(nonce, nonce, timedTokenDataStr, nil)
+	return base64.RawURLEncoding.EncodeToString(cipheredText), nil
 }
