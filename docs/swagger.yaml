@@ -15,6 +15,13 @@ definitions:
     - email
     - password
     type: object
+  auth.passwordResetRequestPayload:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   auth.registerUserPayload:
     properties:
       dateOfBirth:
@@ -173,6 +180,37 @@ paths:
             $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
       security: []
       summary: Log in a user
+      tags:
+      - auth
+  /auth/password-reset-request:
+    post:
+      consumes:
+      - application/json
+      description: Request to reset a users password
+      parameters:
+      - description: password reset request payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/auth.passwordResetRequestPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security: []
+      summary: Request to reset a users password
       tags:
       - auth
   /auth/register:
