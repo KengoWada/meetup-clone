@@ -28,4 +28,8 @@ var (
 	resetUserPasswordPayloadErrors = utils.FieldErrorMessages{
 		"password": passwordErrors,
 	}
+
+	passwordResetRequestPayloadErrors = utils.FieldErrorMessages{
+		"email": emailErrors,
+	}
 )

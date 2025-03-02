@@ -15,6 +15,10 @@ type resetUserPasswordPayload struct {
 	Password string `json:"password" validate:"required,min=10,max=72,is_password"`
 }
 
+type passwordResetRequestPayload struct {
+	Email string `json:"email" validate:"required"`
+}
+
 // ResetUserPassword godoc
 //
 //	@Summary		Reset a users password
@@ -99,4 +103,78 @@ func (h *Handler) resetUserPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.SuccessResponseOK(w, "Password successfully updated", nil)
+}
+
+// PasswordResetRequest godoc
+//
+//	@Summary		Request to reset a users password
+//	@Description	Request to reset a users password
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		passwordResetRequestPayload	true	"password reset request payload"
+//	@Success		200		{object}	response.DocsResponseMessageOnly
+//	@Failure		400		{object}	response.DocsErrorResponse
+//	@Failure		500		{object}	response.DocsErrorResponseInternalServerErr
+//	@Security
+//	@Router	/auth/password-reset-request [post]
+func (h *Handler) passwordResetRequest(w http.ResponseWriter, r *http.Request) {
+	var payload passwordResetRequestPayload
+	err := utils.ReadJSON(w, r, &payload)
+	if err != nil {
+		if strings.Contains(err.Error(), "json: unknown field") {
+			response.ErrorResponseUnknownField(w, r, err)
+			return
+		}
+		response.ErrorResponseInternalServerErr(w, r, err)
+		return
+	}
+
+	if errResponse, err := utils.ValidatePayload(payload, passwordResetRequestPayloadErrors); err != nil {
+		switch err {
+		case utils.ErrFailedValidation:
+			errorMessage := response.NewValidationErrorResponse(errResponse)
+			response.ErrorResponseBadRequest(w, r, err, errorMessage)
+
+		default:
+			response.ErrorResponseInternalServerErr(w, r, err)
+		}
+		return
+	}
+
+	const message = "Email has been sent."
+	var ctx = r.Context()
+
+	user, err := h.store.Users.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			response.SuccessResponseOK(w, message, nil)
+		default:
+			response.ErrorResponseInternalServerErr(w, r, err)
+		}
+		return
+	}
+
+	if user.IsDeactivated() || !user.IsActive {
+		response.SuccessResponseOK(w, message, nil)
+		return
+	}
+
+	token, err := utils.GenerateToken(user.Email, []byte(h.config.SecretKey))
+	if err != nil {
+		response.ErrorResponseInternalServerErr(w, r, err)
+		return
+	}
+
+	user.PasswordResetToken = token
+	err = h.store.Users.SetPasswordResetToken(ctx, user)
+	if err != nil {
+		response.ErrorResponseInternalServerErr(w, r, err)
+		return
+	}
+
+	// TODO: send email to user
+
+	response.SuccessResponseOK(w, message, nil)
 }
