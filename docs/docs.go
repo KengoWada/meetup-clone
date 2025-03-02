@@ -217,6 +217,59 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "security": [],
+                "description": "Reset a users password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Reset a users password",
+                "parameters": [
+                    {
+                        "description": "reset user password payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.resetUserPasswordPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsResponseMessageOnly"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsResponseMessageOnly"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -283,6 +336,23 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.resetUserPasswordPayload": {
+            "type": "object",
+            "required": [
+                "password",
+                "token"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 10
+                },
+                "token": {
                     "type": "string"
                 }
             }

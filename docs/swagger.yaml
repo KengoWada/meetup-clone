@@ -47,6 +47,18 @@ definitions:
     required:
     - email
     type: object
+  auth.resetUserPasswordPayload:
+    properties:
+      password:
+        maxLength: 72
+        minLength: 10
+        type: string
+      token:
+        type: string
+    required:
+    - password
+    - token
+    type: object
   response.DocsErrorResponse:
     properties:
       errors:
@@ -223,6 +235,41 @@ paths:
             $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
       security: []
       summary: Resend verification email to user
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset a users password
+      parameters:
+      - description: reset user password payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/auth.resetUserPasswordPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security: []
+      summary: Reset a users password
       tags:
       - auth
 securityDefinitions:
