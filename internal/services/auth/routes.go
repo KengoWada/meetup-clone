@@ -25,6 +25,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux.Post("/register", h.registerUser)
 	mux.Post("/login", h.loginUser)
 	mux.Patch("/activate", h.activateUser)
+	mux.Post("/resend-verification-email", h.resendVerificationEmail)
 
 	return mux
 }

@@ -14,6 +14,10 @@ type activateUserPayload struct {
 	Token string `json:"token"`
 }
 
+type resendVerificationEmailPayload struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
 // ActivateUser godoc
 //
 //	@Summary		Activate a user
@@ -78,4 +82,69 @@ func (h *Handler) activateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.SuccessResponseOK(w, "Email successfully verified", nil)
+}
+
+// ResendVerificationEmail godoc
+//
+//	@Summary		Resend verification email to user
+//	@Description	Resend verification email to user
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		resendVerificationEmailPayload		true	"resend verification email payload"
+//	@Success		200		{object}	response.DocsResponseMessageOnly	"email sent if account exists"
+//	@Failure		400		{object}	response.DocsErrorResponse
+//	@Failure		500		{object}	response.DocsErrorResponseInternalServerErr
+//	@Security
+//	@Router	/auth/resend-verification-email [post]
+func (h *Handler) resendVerificationEmail(w http.ResponseWriter, r *http.Request) {
+	var payload resendVerificationEmailPayload
+	err := utils.ReadJSON(w, r, &payload)
+	if err != nil {
+		if strings.Contains(err.Error(), "json: unknown field") {
+			response.ErrorResponseUnknownField(w, r, err)
+			return
+		}
+		response.ErrorResponseInternalServerErr(w, r, err)
+		return
+	}
+
+	if errResponse, err := utils.ValidatePayload(payload, resendVerificationEmailPayloadErrors); err != nil {
+		switch err {
+		case utils.ErrFailedValidation:
+			errorMessage := response.NewValidationErrorResponse(errResponse)
+			response.ErrorResponseBadRequest(w, r, err, errorMessage)
+
+		default:
+			response.ErrorResponseInternalServerErr(w, r, err)
+		}
+		return
+	}
+
+	const responseMessage = "Email has been sent"
+
+	user, err := h.store.Users.GetByEmail(r.Context(), payload.Email)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			response.SuccessResponseOK(w, responseMessage, nil)
+		default:
+			response.ErrorResponseInternalServerErr(w, r, err)
+		}
+		return
+	}
+
+	if user.IsActivated() || user.IsDeactivated() {
+		response.SuccessResponseOK(w, responseMessage, nil)
+		return
+	}
+
+	_, err = utils.GenerateToken(user.Email, []byte(h.config.SecretKey))
+	if err != nil {
+		response.ErrorResponseInternalServerErr(w, r, err)
+		return
+	}
+	// TODO: Send email to activate account.
+
+	response.SuccessResponseOK(w, responseMessage, nil)
 }

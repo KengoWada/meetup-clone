@@ -3,8 +3,10 @@ package auth
 import "github.com/KengoWada/meetup-clone/internal/utils"
 
 var (
+	emailErrors = utils.TagErrorMessages{"email": "Invalid email address provided"}
+
 	registerUserPayloadErrors = utils.FieldErrorMessages{
-		"email": {"email": "Invalid email address provided"},
+		"email": emailErrors,
 		"password": {
 			"min":         "Password must have at least 10 characters",
 			"max":         "Password must have at most 72 characters",
@@ -16,5 +18,9 @@ var (
 		},
 		"profilePic":  {"http_url": "Invalid URL format"},
 		"dateOfBirth": {"is_date": "Invalid date format. mm/dd/yyyy"},
+	}
+
+	resendVerificationEmailPayloadErrors = utils.FieldErrorMessages{
+		"email": emailErrors,
 	}
 )
