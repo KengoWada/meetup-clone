@@ -1,5 +1,10 @@
 basePath: /v1
 definitions:
+  auth.activateUserPayload:
+    properties:
+      token:
+        type: string
+    type: object
   auth.loginUserPayload:
     properties:
       email:
@@ -53,6 +58,11 @@ definitions:
         example: internal server error
         type: string
     type: object
+  response.DocsResponseMessageOnly:
+    properties:
+      message:
+        type: string
+    type: object
   response.DocsSuccessResponseLoginUser:
     properties:
       data:
@@ -80,6 +90,41 @@ info:
   termsOfService: http://swagger.io/terms/
   title: MeetUp Clone API
 paths:
+  /auth/activate:
+    patch:
+      consumes:
+      - application/json
+      description: Activate a user
+      parameters:
+      - description: activate user payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/auth.activateUserPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user successfully activated
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security: []
+      summary: Activate a user
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:

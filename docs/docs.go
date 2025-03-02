@@ -24,6 +24,59 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/activate": {
+            "patch": {
+                "security": [],
+                "description": "Activate a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Activate a user",
+                "parameters": [
+                    {
+                        "description": "activate user payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.activateUserPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "user successfully activated",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsResponseMessageOnly"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsResponseMessageOnly"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "security": [],
@@ -120,6 +173,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "auth.activateUserPayload": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.loginUserPayload": {
             "type": "object",
             "required": [
@@ -192,6 +253,14 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "internal server error"
+                }
+            }
+        },
+        "response.DocsResponseMessageOnly": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
                 }
             }
         },
