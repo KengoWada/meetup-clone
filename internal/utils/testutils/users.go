@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
@@ -117,7 +118,7 @@ func (c TestUserData) CreateTestUser(ctx context.Context, appStore store.Store) 
 	}
 
 	if c.Activate {
-		timeNow := time.Now().UTC().Format(store.DateTimeFormat)
+		timeNow := time.Now().UTC().Format(internal.DateTimeFormat)
 		user.ActivatedAt = &timeNow
 
 		err := appStore.Users.Activate(ctx, &user)

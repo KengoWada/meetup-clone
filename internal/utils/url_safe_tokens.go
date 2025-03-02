@@ -11,7 +11,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/KengoWada/meetup-clone/internal/store"
+	"github.com/KengoWada/meetup-clone/internal"
 )
 
 var ErrExpiredToken = errors.New("token has expired")
@@ -54,7 +54,7 @@ type TimedTokenData struct {
 //   - Base64 URL encoding ensures that the token can be safely transmitted over URLs without
 //     any special character issues.
 func GenerateToken(data string, key []byte) (string, error) {
-	return generateToken(data, key, time.Now().UTC().Format(store.DateTimeFormat))
+	return generateToken(data, key, time.Now().UTC().Format(internal.DateTimeFormat))
 }
 
 // GenerateTestToken creates an encrypted test token with the provided data and timestamp.
@@ -127,7 +127,7 @@ func ValidateToken(token string, key []byte, expiresIn time.Duration) (*TimedTok
 	}
 
 	timeNow := time.Now()
-	createdAt, err := time.Parse(time.RFC3339, timedTokenData.CreatedAt)
+	createdAt, err := time.Parse(internal.DateTimeFormat, timedTokenData.CreatedAt)
 	if err != nil {
 		return nil, err
 	}

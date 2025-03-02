@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/models"
 )
 
@@ -97,7 +98,7 @@ func (s *UserStore) Deactivate(ctx context.Context, user *models.User) error {
 		return s.deactivateActiveUser(ctx, user)
 	}
 
-	timeNow := time.Now().UTC().Format(DateTimeFormat)
+	timeNow := time.Now().UTC().Format(internal.DateTimeFormat)
 	user.ActivatedAt = &timeNow
 	return s.deactivateInActiveUser(ctx, user)
 }

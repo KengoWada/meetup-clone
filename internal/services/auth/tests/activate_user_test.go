@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/app"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/KengoWada/meetup-clone/internal/utils/testutils"
@@ -94,7 +95,7 @@ func TestActivateUser(t *testing.T) {
 			testUserData.Email,
 			[]byte(appItems.App.Config.SecretKey),
 			// get current time and subtract an hour
-			time.Now().Add(-time.Hour).UTC().Format(time.RFC3339),
+			time.Now().Add(-time.Hour).UTC().Format(internal.DateTimeFormat),
 		)
 		if err != nil {
 			t.Fatal("failed to generate test token to activate a user")

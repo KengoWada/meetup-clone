@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/config"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/rs/zerolog"
@@ -34,7 +35,7 @@ func Get() zerolog.Logger {
 
 		var output io.Writer = zerolog.ConsoleWriter{
 			Out:        os.Stdout,
-			TimeFormat: time.RFC3339,
+			TimeFormat: internal.DateTimeFormat,
 			FieldsExclude: []string{
 				"user_agent",
 				"git_revision",

@@ -13,10 +13,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/models"
 )
 
-const (
-	DateTimeFormat       = time.RFC3339
-	QueryTimeoutDuration = time.Second * 5
-)
+const QueryTimeoutDuration = time.Second * 5
 
 var ErrNotFound = errors.New("item not found")
 
