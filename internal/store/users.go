@@ -143,6 +143,73 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*models.User,
 	return &user, nil
 }
 
+// ResetPassword updates a user's password in the database.
+//
+// This function resets the password for the given user and persists the change to the database.
+// It expects that the password has already been validated and hashed before being passed in.
+//
+// Parameters:
+//   - ctx (context.Context): The context for managing request deadlines and cancellations.
+//   - user (*models.User): A pointer to the user model containing the updated password.
+//
+// Returns:
+//   - error: An error if updating the password in the database fails, or nil on success.
+func (s *UserStore) ResetPassword(ctx context.Context, user *models.User) error {
+	query := `
+		UPDATE users
+		SET password = $1, password_reset_token = $2, version = version + 1
+		WHERE id = $3 AND version = $4
+		RETURNING version, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(ctx, query, user.Password, user.PasswordResetToken, user.ID, user.Version).Scan(&user.Version, &user.UpdatedAt)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+// SetPasswordResetToken sets a password reset token for a user.
+//
+// This function sets the secure token, associates it with the given user.
+//
+// Parameters:
+//   - ctx (context.Context): The context for managing request deadlines and cancellations.
+//   - user (*models.User): A pointer to the user model for which the reset token is generated.
+//
+// Returns:
+//   - error: An error if generating the token or updating the user record fails, or nil on success.
+func (s *UserStore) SetPasswordResetToken(ctx context.Context, user *models.User) error {
+	query := `
+		UPDATE users
+		SET password_reset_token = $1, version = version + 1
+		WHERE id = $2 AND version = $3
+		RETURNING version, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(ctx, query, user.PasswordResetToken, user.ID, user.Version).Scan(&user.Version, &user.UpdatedAt)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
 // createUser creates a new user in the database within an active transaction.
 // It inserts the user record into the appropriate table and returns an error
 // if the operation fails. The method ensures the operation is performed
