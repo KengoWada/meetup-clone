@@ -40,6 +40,13 @@ definitions:
     - profilePic
     - username
     type: object
+  auth.resendVerificationEmailPayload:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   response.DocsErrorResponse:
     properties:
       errors:
@@ -185,6 +192,37 @@ paths:
             $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
       security: []
       summary: Register a user
+      tags:
+      - auth
+  /auth/resend-verification-email:
+    post:
+      consumes:
+      - application/json
+      description: Resend verification email to user
+      parameters:
+      - description: resend verification email payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/auth.resendVerificationEmailPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: email sent if account exists
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security: []
+      summary: Resend verification email to user
       tags:
       - auth
 securityDefinitions:
