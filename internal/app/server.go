@@ -10,6 +10,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/logger"
 	appMiddleware "github.com/KengoWada/meetup-clone/internal/middleware"
 	"github.com/KengoWada/meetup-clone/internal/services/auth"
+	"github.com/KengoWada/meetup-clone/internal/services/profiles"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
@@ -38,6 +39,10 @@ func (app *Application) Mount() http.Handler {
 		authHandler := auth.NewHandler(app.Store, app.Config, app.Authenticator)
 		authMux := authHandler.RegisterRoutes()
 		r.Mount("/auth", authMux)
+
+		profileHandler := profiles.NewHandler(app.Store, app.Config, app.Authenticator)
+		profileMux := profileHandler.RegisterRoutes()
+		r.Mount("/profiles", profileMux)
 	})
 
 	return mux
