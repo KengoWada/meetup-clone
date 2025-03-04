@@ -2,12 +2,23 @@
 // with the validator package to perform complex or application-specific validations.
 package validate
 
-import "github.com/go-playground/validator/v10"
+import (
+	"sync"
 
-var Validate *validator.Validate
+	"github.com/go-playground/validator/v10"
+)
 
-func init() {
-	Validate = validator.New(validator.WithRequiredStructEnabled())
-	Validate.RegisterValidation("is_date", dateValidator)
-	Validate.RegisterValidation("is_password", passwordValidator)
+var (
+	once     sync.Once
+	Validate *validator.Validate
+)
+
+func Get() *validator.Validate {
+	once.Do(func() {
+		Validate = validator.New(validator.WithRequiredStructEnabled())
+		Validate.RegisterValidation("is_date", dateValidator)
+		Validate.RegisterValidation("is_password", passwordValidator)
+	})
+
+	return Validate
 }

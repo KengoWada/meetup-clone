@@ -58,7 +58,8 @@ var (
 //	errorMessages := map[string]string{"Name": "Name is required", "Age": "Age must be at least 18"}
 //	result, err := ValidatePayload(payload, errorMessages)
 func ValidatePayload(payload any, errorMessages FieldErrorMessages) (map[string]string, error) {
-	err := Validate.Struct(payload)
+	v := Get()
+	err := v.Struct(payload)
 	if err == nil {
 		return nil, nil
 	}
