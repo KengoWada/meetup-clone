@@ -8,6 +8,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
+	"github.com/KengoWada/meetup-clone/internal/validate"
 )
 
 type registerUserPayload struct {
@@ -43,9 +44,9 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errResponse, err := utils.ValidatePayload(payload, registerUserPayloadErrors); err != nil {
+	if errResponse, err := validate.ValidatePayload(payload, registerUserPayloadErrors); err != nil {
 		switch err {
-		case utils.ErrFailedValidation:
+		case validate.ErrFailedValidation:
 			errorMessage := response.NewValidationErrorResponse(errResponse)
 			response.ErrorResponseBadRequest(w, r, err, errorMessage)
 

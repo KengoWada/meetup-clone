@@ -9,6 +9,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
+	"github.com/KengoWada/meetup-clone/internal/validate"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -48,9 +49,9 @@ func (h *Handler) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errResponse, err := utils.ValidatePayload(payload, utils.FieldErrorMessages{}); err != nil {
+	if errResponse, err := validate.ValidatePayload(payload, validate.FieldErrorMessages{}); err != nil {
 		switch err {
-		case utils.ErrFailedValidation:
+		case validate.ErrFailedValidation:
 			errorMessage := response.NewValidationErrorResponse(errResponse)
 			response.ErrorResponseBadRequest(w, r, err, errorMessage)
 		default:

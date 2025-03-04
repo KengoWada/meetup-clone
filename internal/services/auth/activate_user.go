@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
+	"github.com/KengoWada/meetup-clone/internal/validate"
 )
 
 type activateUserPayload struct {
@@ -109,9 +111,9 @@ func (h *Handler) resendVerificationEmail(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if errResponse, err := utils.ValidatePayload(payload, resendVerificationEmailPayloadErrors); err != nil {
+	if errResponse, err := validate.ValidatePayload(payload, resendVerificationEmailPayloadErrors); err != nil {
 		switch err {
-		case utils.ErrFailedValidation:
+		case validate.ErrFailedValidation:
 			errorMessage := response.NewValidationErrorResponse(errResponse)
 			response.ErrorResponseBadRequest(w, r, err, errorMessage)
 
@@ -139,12 +141,13 @@ func (h *Handler) resendVerificationEmail(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, err = utils.GenerateToken(user.Email, []byte(h.config.SecretKey))
+	token, err := utils.GenerateToken(user.Email, []byte(h.config.SecretKey))
 	if err != nil {
 		response.ErrorResponseInternalServerErr(w, r, err)
 		return
 	}
 	// TODO: Send email to activate account.
+	fmt.Printf("'%s'\n", token)
 
 	response.SuccessResponseOK(w, responseMessage, nil)
 }
