@@ -19,6 +19,10 @@ type DocsErrorResponseInternalServerErr struct {
 	Message string `json:"message" example:"internal server error"`
 }
 
+type DocsErrorResponseUnauthorized struct {
+	Message string `json:"message" example:"unauthorized"`
+}
+
 // DocsSuccessResponseLoginUser represents an example success response for a user login
 // in Swagger documentation. It includes a token that would typically be returned upon
 // successful authentication. This struct is used to provide example success responses
