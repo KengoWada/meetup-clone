@@ -1,17 +1,36 @@
-package utils
+package validate
 
 import (
 	"errors"
 	"unicode"
 
-	"github.com/KengoWada/meetup-clone/internal/validate"
 	"github.com/go-playground/validator/v10"
 )
 
 type TagErrorMessages map[string]string
+
 type FieldErrorMessages map[string]TagErrorMessages
 
-var ErrFailedValidation = errors.New("payload failed validation")
+var (
+	ErrFailedValidation = errors.New("payload failed validation")
+
+	TagErrorsEmail = TagErrorMessages{"email": "Invalid email address provided"}
+
+	TagErrorsPassword = TagErrorMessages{
+		"min":         "Password must have at least 10 characters",
+		"max":         "Password must have at most 72 characters",
+		"is_password": "Password must contain a number, lower case character, upper case character and one of the special symbols(including space) !@#$%^&*()-_+=,.?|\\/<>[]{}",
+	}
+
+	TagErrorsDOB = TagErrorMessages{"is_date": "Invalid date format. mm/dd/yyyy"}
+
+	TagErrorsUsername = TagErrorMessages{
+		"min": "Username must have at least 3 characters",
+		"max": "Username must have at most 100 characters",
+	}
+
+	TagErrorsURL = TagErrorMessages{"http_url": "Invalid URL format"}
+)
 
 // ValidatePayload validates the provided payload using custom validation rules. It returns a
 // map of field names to error messages for any fields that fail validation, along with an error
@@ -39,7 +58,7 @@ var ErrFailedValidation = errors.New("payload failed validation")
 //	errorMessages := map[string]string{"Name": "Name is required", "Age": "Age must be at least 18"}
 //	result, err := ValidatePayload(payload, errorMessages)
 func ValidatePayload(payload any, errorMessages FieldErrorMessages) (map[string]string, error) {
-	err := validate.Validate.Struct(payload)
+	err := Validate.Struct(payload)
 	if err == nil {
 		return nil, nil
 	}
@@ -52,26 +71,6 @@ func ValidatePayload(payload any, errorMessages FieldErrorMessages) (map[string]
 	return errResponse, ErrFailedValidation
 }
 
-// generateErrorMessages generates a map of field-specific error messages based on the provided
-// error and custom error messages. It processes the validation errors and returns a map where
-// the keys are the field names and the values are the error messages.
-//
-// Parameters:
-//   - err: The error object that contains the validation errors. This error is from validate
-//     that includes field-level error details.
-//   - errorMessages: A map of custom error messages for specific fields. This map is used to
-//     customize the error message for each field when validation fails.
-//
-// Returns:
-//   - A map where keys are the names of fields that failed validation, and the values are
-//     the corresponding error messages.
-//   - An error if there is an issue processing the input error or generating the error messages.
-//
-// Example:
-//
-//	err := validate.Struct(payload) // returns validation error
-//	errorMessages := map[string]string{"Name": "Name is required", "Age": "Age must be at least 18"}
-//	result, err := generateErrorMessages(err, errorMessages)
 func generateErrorMessages(err error, errorMessages FieldErrorMessages) (map[string]string, error) {
 	var validateErrs validator.ValidationErrors
 	var response = make(map[string]string)
@@ -100,21 +99,6 @@ func generateErrorMessages(err error, errorMessages FieldErrorMessages) (map[str
 	return response, nil
 }
 
-// firstLetterToLower converts the first letter of a string to lowercase, leaving
-// the rest of the string unchanged. If the string is empty, it returns the string as is.
-//
-// Parameters:
-//   - s: The string whose first letter needs to be converted to lowercase.
-//
-// Returns:
-//   - The string with the first letter converted to lowercase. If the string is empty,
-//     the original string is returned unchanged.
-//
-// Example:
-//
-//	firstLetterToLower("Hello") // returns "hello"
-//	firstLetterToLower("world") // returns "world"
-//	firstLetterToLower("")      // returns ""
 func firstLetterToLower(s string) string {
 	if len(s) == 0 {
 		return s
