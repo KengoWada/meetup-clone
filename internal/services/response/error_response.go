@@ -73,3 +73,18 @@ func ErrorResponseUnknownField(w http.ResponseWriter, r *http.Request, err error
 
 	ErrorResponseBadRequest(w, r, err, errorResponse)
 }
+
+// ErrorResponseUnauthorized returns an unauthorized request error response (HTTP 401)
+// when the user sends invalid credentials.
+func ErrorResponseUnauthorized(w http.ResponseWriter, r *http.Request, err error) {
+	reqIDRaw := middleware.GetReqID(r.Context())
+	log.Warn().
+		Str("requestID", reqIDRaw).
+		Str("method", r.Method).
+		Str("url", r.URL.Path).
+		Err(errors.Wrap(err, "unauthorized")).
+		Msg("Unauthorized")
+
+	response := ErrorResponse{Message: "unauthorized"}
+	utils.WriteJSON(w, http.StatusUnauthorized, response)
+}
