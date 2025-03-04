@@ -55,10 +55,11 @@ func (s *UserStore) Activate(ctx context.Context, user *models.User) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	timeNow := time.Now().UTC().Format(internal.DateTimeFormat)
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
-		user.ActivatedAt,
+		&timeNow,
 		user.ID,
 		user.Version,
 	).Scan(
@@ -101,6 +102,55 @@ func (s *UserStore) Deactivate(ctx context.Context, user *models.User) error {
 	timeNow := time.Now().UTC().Format(internal.DateTimeFormat)
 	user.ActivatedAt = &timeNow
 	return s.deactivateInActiveUser(ctx, user)
+}
+
+// GetByEmail retrieves a user from the database by their email address.
+func (s *UserStore) GetByID(ctx context.Context, ID int) (*models.User, error) {
+	query := `
+		SELECT u.*, up.* FROM users u
+		INNER JOIN user_profiles up
+		ON u.id = up.user_id
+		WHERE u.id = $1 AND u.deleted_at IS NULL
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	user := models.User{UserProfile: &models.UserProfile{}}
+	err := s.db.
+		QueryRowContext(ctx, query, ID).
+		Scan(
+			&user.ID,
+			&user.Email,
+			&user.Password,
+			&user.IsActive,
+			&user.ActivatedAt,
+			&user.Role,
+			&user.PasswordResetToken,
+			&user.Version,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.DeletedAt,
+			&user.UserProfile.ID,
+			&user.UserProfile.Username,
+			&user.UserProfile.ProfilePic,
+			&user.UserProfile.DateOfBirth,
+			&user.UserProfile.UserID,
+			&user.UserProfile.Version,
+			&user.UserProfile.CreatedAt,
+			&user.UserProfile.UpdatedAt,
+			&user.UserProfile.DeletedAt,
+		)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
 }
 
 // GetByEmail retrieves a user from the database by their email address.

@@ -26,6 +26,7 @@ type Store struct {
 		Activate(context.Context, *models.User) error
 		Deactivate(context.Context, *models.User) error
 		GetByEmail(ctx context.Context, email string) (*models.User, error)
+		GetByID(ctx context.Context, ID int) (*models.User, error)
 		ResetPassword(context.Context, *models.User) error
 		SetPasswordResetToken(context.Context, *models.User) error
 	}
