@@ -27,6 +27,7 @@ func (app *Application) Mount() http.Handler {
 	mux.Use(appMiddleware.LoggerMiddleware)
 	mux.Use(middleware.Recoverer)
 	mux.Use(middleware.Timeout(60 * time.Second))
+	mux.Use(appMiddleware.JWTMiddleware(app.Authenticator, app.Store))
 
 	mux.Route("/v1", func(r chi.Router) {
 		if app.Config.Environment == config.AppEnvDev {
