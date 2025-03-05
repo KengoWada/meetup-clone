@@ -25,6 +25,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 		r.Use(middleware.AuthenticatedRoute)
 
 		r.Get("/", h.getPersonalProfile)
+		r.Put("/", h.updateUserProfile)
 	})
 
 	return mux
