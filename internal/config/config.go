@@ -6,25 +6,15 @@ package config
 import (
 	"slices"
 	"sync"
-	"time"
 
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/rs/zerolog"
-)
-
-const (
-	DateTimeFormat = time.RFC3339
-	DateFormat     = "01/02/2006" // mm/dd/yyyy
-
-	UserCtx userKey = "user"
 )
 
 var (
 	once      sync.Once
 	appConfig Config
 )
-
-type userKey string
 
 // Get creates a new Config instance with default values.
 func Get() Config {
