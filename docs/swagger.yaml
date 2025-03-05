@@ -66,6 +66,23 @@ definitions:
     - password
     - token
     type: object
+  profiles.userProfile:
+    properties:
+      dateOfBirth:
+        example: mm/dd/yyyy
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      profilePic:
+        type: string
+      role:
+        example: client
+        type: string
+      username:
+        type: string
+    type: object
   response.DocsErrorResponse:
     properties:
       errors:
@@ -82,6 +99,12 @@ definitions:
     properties:
       message:
         example: internal server error
+        type: string
+    type: object
+  response.DocsErrorResponseUnauthorized:
+    properties:
+      message:
+        example: unauthorized
         type: string
     type: object
   response.DocsResponseMessageOnly:
@@ -310,6 +333,59 @@ paths:
       summary: Reset a users password
       tags:
       - auth
+  /profiles/:
+    get:
+      consumes:
+      - application/json
+      description: Get a users details based on token provided
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/profiles.userProfile'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a users details based on token provided
+      tags:
+      - profiles
+    put:
+      consumes:
+      - application/json
+      description: Update a users profile details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/profiles.userProfile'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a users profile details
+      tags:
+      - profiles
 securityDefinitions:
   ApiKeyAuth:
     in: header

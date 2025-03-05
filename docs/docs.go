@@ -317,6 +317,90 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/profiles/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a users details based on token provided",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profiles"
+                ],
+                "summary": "Get a users details based on token provided",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.userProfile"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a users profile details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profiles"
+                ],
+                "summary": "Update a users profile details",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.userProfile"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsResponseMessageOnly"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -415,6 +499,31 @@ const docTemplate = `{
                 }
             }
         },
+        "profiles.userProfile": {
+            "type": "object",
+            "properties": {
+                "dateOfBirth": {
+                    "type": "string",
+                    "example": "mm/dd/yyyy"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "profilePic": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "client"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "response.DocsErrorResponse": {
             "type": "object",
             "properties": {
@@ -439,6 +548,15 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "internal server error"
+                }
+            }
+        },
+        "response.DocsErrorResponseUnauthorized": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "unauthorized"
                 }
             }
         },
