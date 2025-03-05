@@ -7,13 +7,11 @@ import (
 	"io"
 	"os"
 	"runtime/debug"
-	"slices"
 	"sync"
 	"time"
 
 	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/config"
-	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -30,6 +28,7 @@ var (
 // instance for consistent logging throughout the application.
 func Get() zerolog.Logger {
 	once.Do(func() {
+		cfg := config.Get()
 		zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 		zerolog.TimeFieldFormat = time.RFC3339Nano
 
@@ -43,12 +42,7 @@ func Get() zerolog.Logger {
 			},
 		}
 
-		appEnv := config.AppEnv(utils.EnvGetString("SERVER_ENVIRONMENT", string(config.AppEnvProd)))
-		if !slices.Contains(config.Environments, appEnv) {
-			appEnv = config.AppEnvProd
-		}
-
-		if appEnv == config.AppEnvProd {
+		if cfg.Environment == config.AppEnvProd {
 			fileLogger := &lumberjack.Logger{
 				Filename:   "meetup_clone.log",
 				MaxSize:    5,
@@ -72,13 +66,8 @@ func Get() zerolog.Logger {
 			}
 		}
 
-		logLevel := utils.EnvGetInt("LOG_LEVEL", int(zerolog.InfoLevel))
-		if appEnv == config.AppEnvTest {
-			logLevel = int(zerolog.Disabled)
-		}
-
 		log = zerolog.New(output).
-			Level(zerolog.Level(logLevel)).
+			Level(zerolog.Level(cfg.LogLevel)).
 			With().
 			Stack().
 			Caller().

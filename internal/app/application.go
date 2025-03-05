@@ -21,7 +21,7 @@ type AppItems struct {
 }
 
 func NewApplication() (*AppItems, error) {
-	cfg := config.NewConfig()
+	cfg := config.Get()
 
 	appItems := &AppItems{}
 
