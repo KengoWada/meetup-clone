@@ -29,13 +29,18 @@ func Get() Config {
 			dbAddr = "TEST_DB_ADDR"
 		}
 
+		loglevel := utils.EnvGetInt("LOG_LEVEL", int(zerolog.InfoLevel))
+		if environment == AppEnvTest {
+			loglevel = int(zerolog.Disabled)
+		}
+
 		appConfig = Config{
 			Addr:        utils.EnvGetString("SERVER_ADDR", ""),
 			Debug:       utils.EnvGetBool("DEBUG", false),
 			Environment: environment,
 			FrontendURL: utils.EnvGetString("FRONTEND_URL", ""),
 			ApiURL:      utils.EnvGetString("API_URL", ""),
-			LogLevel:    utils.EnvGetInt("LOG_LEVEL", int(zerolog.InfoLevel)),
+			LogLevel:    loglevel,
 			SecretKey:   utils.EnvGetString("SECRET_KEY", ""),
 			DBConfig: DBConfig{
 				Addr:         utils.EnvGetString(dbAddr, ""),
