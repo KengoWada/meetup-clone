@@ -260,6 +260,22 @@ func (s *UserStore) SetPasswordResetToken(ctx context.Context, user *models.User
 	return nil
 }
 
+func (s *UserStore) UpdateUserDetails(ctx context.Context, user *models.User) error {
+	return WithTx(s.db, ctx, func(tx *sql.Tx) error {
+		err := s.updateUser(ctx, tx, user)
+		if err != nil {
+			return err
+		}
+
+		err = s.updateUserProfile(ctx, tx, user.UserProfile)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
 // createUser creates a new user in the database within an active transaction.
 // It inserts the user record into the appropriate table and returns an error
 // if the operation fails. The method ensures the operation is performed
@@ -408,6 +424,65 @@ func (s *UserStore) deactivateInActiveUser(ctx context.Context, user *models.Use
 		&user.IsActive,
 		&user.ActivatedAt,
 		&user.UpdatedAt,
+	)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *UserStore) updateUser(ctx context.Context, tx *sql.Tx, user *models.User) error {
+	query := `
+		UPDATE users SET email = $1, version = version + 1
+		WHERE id = $2 AND version = $3
+		RETURNING email, version, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := tx.QueryRowContext(ctx, query, user.Email, user.ID, user.Version).Scan(&user.Email, &user.Version, &user.UpdatedAt)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *UserStore) updateUserProfile(ctx context.Context, tx *sql.Tx, userProfile *models.UserProfile) error {
+	query := `
+		UPDATE user_profiles
+		SET username = $1, profile_pic = $2, date_of_birth = $3, version = version + 1
+		WHERE user_id = $4 AND version = $5
+		RETURNING username, profile_pic, date_of_birth, version, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := tx.QueryRowContext(
+		ctx,
+		query,
+		userProfile.Username,
+		userProfile.ProfilePic,
+		userProfile.DateOfBirth,
+		userProfile.UserID,
+		userProfile.Version,
+	).Scan(
+		&userProfile.Username,
+		&userProfile.ProfilePic,
+		&userProfile.DateOfBirth,
+		&userProfile.Version,
+		&userProfile.UpdatedAt,
 	)
 	if err != nil {
 		switch err {

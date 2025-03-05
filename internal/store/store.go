@@ -29,6 +29,7 @@ type Store struct {
 		GetByID(ctx context.Context, ID int) (*models.User, error)
 		ResetPassword(context.Context, *models.User) error
 		SetPasswordResetToken(context.Context, *models.User) error
+		UpdateUserDetails(ctx context.Context, user *models.User) error
 	}
 }
 
