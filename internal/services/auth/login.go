@@ -95,14 +95,14 @@ func (h *Handler) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exp := time.Hour * time.Duration(h.config.AuthConfig.Exp)
+	exp := time.Hour * time.Duration(cfg.AuthConfig.Exp)
 	claims := jwt.MapClaims{
 		"sub": user.ID,
 		"exp": time.Now().Add(exp).Unix(),
 		"iat": time.Now().Unix(),
 		"nbf": time.Now().Unix(),
-		"iss": h.config.AuthConfig.Issuer,
-		"aud": h.config.AuthConfig.Audience,
+		"iss": cfg.AuthConfig.Issuer,
+		"aud": cfg.AuthConfig.Audience,
 	}
 
 	token, err := h.authenticator.GenerateToken(claims)

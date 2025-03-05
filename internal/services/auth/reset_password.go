@@ -58,7 +58,7 @@ func (h *Handler) resetUserPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	timedToken, err := utils.ValidateToken(payload.Token, []byte(h.config.SecretKey), time.Minute*30)
+	timedToken, err := utils.ValidateToken(payload.Token, []byte(cfg.SecretKey), time.Minute*30)
 	if err != nil {
 		switch err {
 		case utils.ErrExpiredToken:
@@ -162,7 +162,7 @@ func (h *Handler) passwordResetRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateToken(user.Email, []byte(h.config.SecretKey))
+	token, err := utils.GenerateToken(user.Email, []byte(cfg.SecretKey))
 	if err != nil {
 		response.ErrorResponseInternalServerErr(w, r, err)
 		return

@@ -9,14 +9,15 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+var cfg = config.Get()
+
 type Handler struct {
-	config        config.Config
 	store         store.Store
 	authenticator auth.Authenticator
 }
 
-func NewHandler(store store.Store, config config.Config, authenticator auth.Authenticator) *Handler {
-	return &Handler{config, store, authenticator}
+func NewHandler(store store.Store, authenticator auth.Authenticator) *Handler {
+	return &Handler{store, authenticator}
 }
 
 func (h *Handler) RegisterRoutes() http.Handler {

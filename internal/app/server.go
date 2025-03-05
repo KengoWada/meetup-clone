@@ -36,11 +36,11 @@ func (app *Application) Mount() http.Handler {
 			r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 		}
 
-		authHandler := auth.NewHandler(app.Store, app.Config, app.Authenticator)
+		authHandler := auth.NewHandler(app.Store, app.Authenticator)
 		authMux := authHandler.RegisterRoutes()
 		r.Mount("/auth", authMux)
 
-		profileHandler := profiles.NewHandler(app.Store, app.Config, app.Authenticator)
+		profileHandler := profiles.NewHandler(app.Store, app.Authenticator)
 		profileMux := profileHandler.RegisterRoutes()
 		r.Mount("/profiles", profileMux)
 	})

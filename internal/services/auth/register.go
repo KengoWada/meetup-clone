@@ -94,7 +94,7 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = utils.GenerateToken(user.Email, []byte(h.config.SecretKey))
+	_, err = utils.GenerateToken(user.Email, []byte(cfg.SecretKey))
 	if err != nil {
 		response.ErrorResponseInternalServerErr(w, r, err)
 		return
