@@ -99,13 +99,13 @@ func NewTestUserData(activate bool) TestUserData {
 //	    log.Fatal(err)
 //	}
 //	fmt.Println("User created:", user, "Profile created:", profile)
-func (c TestUserData) CreateTestUser(ctx context.Context, appStore store.Store) (*models.User, *models.UserProfile, error) {
+func (c TestUserData) CreateTestUser(ctx context.Context, appStore store.Store, role models.UserRole) (*models.User, *models.UserProfile, error) {
 	passwordHash, err := utils.GeneratePasswordHash(c.Password)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	user := models.User{Email: c.Email, Password: passwordHash}
+	user := models.User{Email: c.Email, Password: passwordHash, Role: role}
 	userProfile := models.UserProfile{
 		Username:    c.Username,
 		ProfilePic:  TestProfilePic,
@@ -141,8 +141,8 @@ func (c TestUserData) CreateTestUser(ctx context.Context, appStore store.Store) 
 // Returns:
 //   - *models.User: The created user object with the deactivated state.
 //   - error: An error if the user creation fails, or nil if the creation is successful.
-func (c TestUserData) CreateDeactivatedTestUser(ctx context.Context, store store.Store) (*models.User, error) {
-	user, _, err := c.CreateTestUser(ctx, store)
+func (c TestUserData) CreateDeactivatedTestUser(ctx context.Context, store store.Store, role models.UserRole) (*models.User, error) {
+	user, _, err := c.CreateTestUser(ctx, store, role)
 	if err != nil {
 		return nil, err
 	}

@@ -27,7 +27,7 @@ func TestDeleteUser(t *testing.T) {
 
 	createTestUser := func(activate bool) *models.User {
 		testUserData := testutils.NewTestUserData(activate)
-		user, userProfile, err := testUserData.CreateTestUser(ctx, appItems.App.Store)
+		user, userProfile, err := testUserData.CreateTestUser(ctx, appItems.App.Store, models.UserClientRole)
 		if err != nil {
 			t.Fatal(err)
 		}

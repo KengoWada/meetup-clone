@@ -8,6 +8,7 @@ import (
 
 	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/app"
+	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/KengoWada/meetup-clone/internal/utils/testutils"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +38,7 @@ func TestResetUserPassword(t *testing.T) {
 
 	createTestUserAndSetPasswordResetToken := func(activate bool, expiredToken bool) (testutils.TestUserData, string) {
 		testUserData := testutils.NewTestUserData(activate)
-		user, _, err := testUserData.CreateTestUser(ctx, appItems.App.Store)
+		user, _, err := testUserData.CreateTestUser(ctx, appItems.App.Store, models.UserClientRole)
 		if err != nil {
 			t.Fatal(err)
 		}

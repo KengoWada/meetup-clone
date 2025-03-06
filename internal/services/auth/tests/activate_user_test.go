@@ -8,6 +8,7 @@ import (
 
 	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/app"
+	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/KengoWada/meetup-clone/internal/utils/testutils"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ func TestActivateUser(t *testing.T) {
 
 	createTestUser := func(activate bool) testutils.TestUserData {
 		testUserData := testutils.NewTestUserData(activate)
-		_, _, err := testUserData.CreateTestUser(ctx, appItems.App.Store)
+		_, _, err := testUserData.CreateTestUser(ctx, appItems.App.Store, models.UserClientRole)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -37,7 +38,7 @@ func TestActivateUser(t *testing.T) {
 
 	createDeactivatedUser := func() testutils.TestUserData {
 		testUserData := testutils.NewTestUserData(true)
-		_, err := testUserData.CreateDeactivatedTestUser(ctx, appItems.App.Store)
+		_, err := testUserData.CreateDeactivatedTestUser(ctx, appItems.App.Store, models.UserClientRole)
 		if err != nil {
 			t.Fatal(err)
 		}
