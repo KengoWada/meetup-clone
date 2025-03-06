@@ -26,6 +26,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 
 		r.Get("/", h.getPersonalProfile)
 		r.Put("/", h.updateUserProfile)
+		r.Delete("/", h.deleteUserProfile)
 	})
 
 	return mux
