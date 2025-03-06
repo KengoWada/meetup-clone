@@ -5,6 +5,7 @@ import (
 
 	"github.com/KengoWada/meetup-clone/internal/auth"
 	"github.com/KengoWada/meetup-clone/internal/config"
+	"github.com/KengoWada/meetup-clone/internal/middleware"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/go-chi/chi/v5"
 )
@@ -22,6 +23,13 @@ func NewHandler(store store.Store, authenticator auth.Authenticator) *Handler {
 
 func (h *Handler) RegisterRoutes() http.Handler {
 	mux := chi.NewRouter()
+
+	mux.Group(func(r chi.Router) {
+		r.Use(middleware.AuthenticatedRoute)
+		r.Use(middleware.IsStaffOrAdmin)
+
+		r.Patch("/users/{userID}/deactivate", h.deactivateUser)
+	})
 
 	mux.Post("/register", h.registerUser)
 	mux.Post("/login", h.loginUser)
