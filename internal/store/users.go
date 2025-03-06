@@ -531,3 +531,51 @@ func (s *UserStore) SoftDeleteUser(ctx context.Context, user *models.User) error
 
 	return nil
 }
+
+func (s *UserStore) GetByIDIcludeDeleted(ctx context.Context, ID int) (*models.User, error) {
+	query := `
+		SELECT u.*, up.* FROM users u
+		INNER JOIN user_profiles up
+		ON u.id = up.user_id
+		WHERE u.id = $1
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	user := models.User{UserProfile: &models.UserProfile{}}
+	err := s.db.
+		QueryRowContext(ctx, query, ID).
+		Scan(
+			&user.ID,
+			&user.Email,
+			&user.Password,
+			&user.IsActive,
+			&user.ActivatedAt,
+			&user.Role,
+			&user.PasswordResetToken,
+			&user.Version,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.DeletedAt,
+			&user.UserProfile.ID,
+			&user.UserProfile.Username,
+			&user.UserProfile.ProfilePic,
+			&user.UserProfile.DateOfBirth,
+			&user.UserProfile.UserID,
+			&user.UserProfile.Version,
+			&user.UserProfile.CreatedAt,
+			&user.UserProfile.UpdatedAt,
+			&user.UserProfile.DeletedAt,
+		)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
