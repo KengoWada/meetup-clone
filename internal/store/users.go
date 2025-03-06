@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/KengoWada/meetup-clone/internal"
@@ -485,6 +486,41 @@ func (s *UserStore) updateUserProfile(ctx context.Context, tx *sql.Tx, userProfi
 		&userProfile.UpdatedAt,
 	)
 	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *UserStore) SoftDeleteUser(ctx context.Context, user *models.User) error {
+	query := `
+		UPDATE users
+		SET deleted_at = $1, version = version + 1
+		WHERE id = $2 AND version = $3
+		RETURNING deleted_at, updated_at, version
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		time.Now().UTC().Format(internal.DateTimeFormat),
+		user.ID,
+		user.Version,
+	).Scan(
+		&user.DeletedAt,
+		&user.UpdatedAt,
+		&user.Version,
+	)
+
+	if err != nil {
+		fmt.Println(err)
 		switch err {
 		case sql.ErrNoRows:
 			return ErrNotFound

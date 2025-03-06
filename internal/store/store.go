@@ -30,6 +30,7 @@ type Store struct {
 		ResetPassword(context.Context, *models.User) error
 		SetPasswordResetToken(context.Context, *models.User) error
 		UpdateUserDetails(ctx context.Context, user *models.User) error
+		SoftDeleteUser(ctx context.Context, user *models.User) error
 	}
 }
 
