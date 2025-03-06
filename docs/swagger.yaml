@@ -333,6 +333,41 @@ paths:
       summary: Reset a users password
       tags:
       - auth
+  /auth/users/{userID}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Deactivate a user
+      parameters:
+      - description: userID to deactivate
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user successfully deactivated
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Deactivate a user
+      tags:
+      - auth
   /profiles/:
     delete:
       consumes:

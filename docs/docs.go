@@ -318,6 +318,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/users/{userID}/deactivate": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deactivate a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Deactivate a user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "userID to deactivate",
+                        "name": "userID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "user successfully deactivated",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsResponseMessageOnly"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
+        },
         "/profiles/": {
             "get": {
                 "security": [
