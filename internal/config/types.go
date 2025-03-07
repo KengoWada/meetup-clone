@@ -28,6 +28,7 @@ type Config struct {
 	SecretKey   string     // The secret key used for generating and signing tokens.
 	DBConfig    DBConfig   // The application database configurations
 	AuthConfig  AuthConfig // The application authentication configurations.
+	CacheConfig CacheConfig
 }
 
 // DBConfig holds the database connection configuration settings.
@@ -44,4 +45,9 @@ type AuthConfig struct {
 	Issuer   string // The issuer claim (iss) for the tokens.
 	Audience string // The audience claim (aud) for the tokens.
 	Exp      int    // The token expiration time in hours.
+}
+
+type CacheConfig struct {
+	Enabled  bool
+	ConnURLs []string
 }

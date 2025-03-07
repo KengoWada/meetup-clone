@@ -54,6 +54,10 @@ func Get() Config {
 				Audience: utils.EnvGetString("JWT_AUDIENCE", "meetup_clone"),
 				Exp:      utils.EnvGetInt("JWT_ACCESS_EXP", 3),
 			},
+			CacheConfig: CacheConfig{
+				ConnURLs: utils.EnvGetStringSlice("MEMCACHED_CONNS", []string{"localhost:11211"}),
+				Enabled:  environment != AppEnvTest,
+			},
 		}
 	})
 
