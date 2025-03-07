@@ -5,6 +5,7 @@ package logger
 
 import (
 	"io"
+	"net/http"
 	"os"
 	"runtime/debug"
 	"sync"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/config"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -80,4 +83,16 @@ func Get() zerolog.Logger {
 	})
 
 	return log
+}
+
+func ErrLoggerCache(r *http.Request, err error) {
+	logger := Get()
+
+	reqIDRaw := middleware.GetReqID(r.Context())
+	logger.Panic().
+		Str("requestID", reqIDRaw).
+		Str("method", r.Method).
+		Str("url", r.URL.Path).
+		Err(errors.Wrap(err, "cache error")).
+		Msg("Cache Error")
 }

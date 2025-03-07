@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/KengoWada/meetup-clone/internal/logger"
 	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -59,7 +60,7 @@ func (h *Handler) deactivateUser(w http.ResponseWriter, r *http.Request) {
 	if cfg.CacheConfig.Enabled {
 		err := h.cacheStore.Users.Delete(userID)
 		if err != nil {
-			// TODO: Log error but don't return 500
+			logger.ErrLoggerCache(r, err)
 		}
 	}
 
