@@ -10,13 +10,17 @@ import (
 
 	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/auth"
+	"github.com/KengoWada/meetup-clone/internal/config"
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
+	"github.com/KengoWada/meetup-clone/internal/store/cache"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func JWTMiddleware(jwtAuthenticator auth.Authenticator, appStore store.Store) func(next http.Handler) http.Handler {
+var cfg = config.Get()
+
+func JWTMiddleware(jwtAuthenticator auth.Authenticator, appStore store.Store, cacheStore cache.Store) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -49,7 +53,7 @@ func JWTMiddleware(jwtAuthenticator auth.Authenticator, appStore store.Store) fu
 			}
 
 			ctx := r.Context()
-			user, err := appStore.Users.GetByID(ctx, int(userID))
+			user, err := getUser(ctx, userID, appStore, cacheStore)
 			if err != nil {
 				switch err {
 				case store.ErrNotFound:
@@ -71,6 +75,33 @@ func JWTMiddleware(jwtAuthenticator auth.Authenticator, appStore store.Store) fu
 
 		return http.HandlerFunc(fn)
 	}
+}
+
+func getUser(ctx context.Context, ID int64, appStore store.Store, cacheStore cache.Store) (*models.User, error) {
+	if !cfg.CacheConfig.Enabled {
+		return appStore.Users.GetByID(ctx, int(ID))
+	}
+
+	user, err := cacheStore.Users.Get(ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user != nil {
+		return user, nil
+	}
+
+	user, err = appStore.Users.GetByID(ctx, int(ID))
+	if err != nil {
+		return nil, err
+	}
+
+	err = cacheStore.Users.Set(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func AuthenticatedRoute(next http.Handler) http.Handler {
