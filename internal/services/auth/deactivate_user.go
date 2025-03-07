@@ -56,5 +56,12 @@ func (h *Handler) deactivateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if cfg.CacheConfig.Enabled {
+		err := h.cacheStore.Users.Delete(userID)
+		if err != nil {
+			// TODO: Log error but don't return 500
+		}
+	}
+
 	response.SuccessResponseOK(w, "Done", nil)
 }
