@@ -28,7 +28,7 @@ func (app *Application) Mount() http.Handler {
 	mux.Use(appMiddleware.LoggerMiddleware)
 	mux.Use(middleware.Recoverer)
 	mux.Use(middleware.Timeout(60 * time.Second))
-	mux.Use(appMiddleware.JWTMiddleware(app.Authenticator, app.Store))
+	mux.Use(appMiddleware.JWTMiddleware(app.Authenticator, app.Store, app.CacheStore))
 
 	mux.Route("/v1", func(r chi.Router) {
 		if app.Config.Environment == config.AppEnvDev {
@@ -36,7 +36,7 @@ func (app *Application) Mount() http.Handler {
 			r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 		}
 
-		authHandler := auth.NewHandler(app.Store, app.Authenticator)
+		authHandler := auth.NewHandler(app.Store, app.CacheStore, app.Authenticator)
 		authMux := authHandler.RegisterRoutes()
 		r.Mount("/auth", authMux)
 
