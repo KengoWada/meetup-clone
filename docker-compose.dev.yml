@@ -10,5 +10,15 @@ services:
     env_file:
       - ./.env/postgres.env
 
+  memcached:
+    image: memcached:latest
+    command:
+      - --conn-limit=1024
+      - --memory-limit=64
+      - --threads=4
+    ports:
+      - 11211:11211
+    restart: always
+
 volumes:
   postgres_data:
