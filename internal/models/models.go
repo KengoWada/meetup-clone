@@ -9,8 +9,8 @@ package models
 // across different models in the application.
 type BaseModel struct {
 	ID        int64   `json:"id"`
-	Version   int64   `json:"-"`
+	Version   int64   `json:"version"`
 	CreatedAt string  `json:"createdAt"`
-	UpdatedAt *string `json:"-"`
-	DeletedAt *string `json:"-"`
+	UpdatedAt *string `json:"updatedAt"`
+	DeletedAt *string `json:"deletedAt"`
 }

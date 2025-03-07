@@ -17,11 +17,11 @@ type UserRole string
 type User struct {
 	BaseModel                       // Embeds common fields like ID, version, and timestamps.
 	Email              string       `json:"email"`                 // The user's email address.
-	Password           string       `json:"-"`                     // The user's password (omitted from JSON).
-	IsActive           bool         `json:"-"`                     // Whether the user is active (omitted from JSON).
-	ActivatedAt        *string      `json:"-"`                     // Timestamp of when the user was activated (omitted from JSON).
+	Password           string       `json:"password"`              // The user's password (omitted from JSON).
+	IsActive           bool         `json:"isActive"`              // Whether the user is active (omitted from JSON).
+	ActivatedAt        *string      `json:"activatedAt"`           // Timestamp of when the user was activated (omitted from JSON).
 	Role               UserRole     `json:"role"`                  // The user's role (e.g., admin, staff, client).
-	PasswordResetToken string       `json:"-"`                     // Token used for password reset (omitted from JSON).
+	PasswordResetToken string       `json:"passwordResetToken"`    // Token used for password reset (omitted from JSON).
 	UserProfile        *UserProfile `json:"userProfile,omitempty"` // The user's profile.
 }
 
