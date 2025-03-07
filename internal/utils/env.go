@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // EnvGetString retrieves the value of the specified environment variable as a string.
@@ -82,4 +83,18 @@ func EnvGetBool(key string, fallback bool) bool {
 	default:
 		return fallback
 	}
+}
+
+func EnvGetStringSlice(key string, fallback []string) []string {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return fallback
+	}
+
+	values := strings.Split(value, ",")
+	if len(values) == 0 {
+		return fallback
+	}
+
+	return values
 }
