@@ -29,9 +29,18 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create application")
 	}
+	var (
+		app       = appItems.App
+		db        = appItems.DB
+		memcached = appItems.Memcached
+	)
 
-	defer appItems.DB.Close()
+	defer db.Close()
 
-	mux := appItems.App.Mount()
-	log.Fatal().Err(appItems.App.Run(mux)).Msg("Server has stopped")
+	if app.Config.CacheConfig.Enabled {
+		defer memcached.Close()
+	}
+
+	mux := app.Mount()
+	log.Fatal().Err(app.Run(mux)).Msg("Server has stopped")
 }
