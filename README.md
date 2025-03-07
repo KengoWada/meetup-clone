@@ -47,6 +47,9 @@ touch .env/postgres.env # Only needed if you are using `docker-compose.dev.yml`
     export JWT_SECRET_KEY=<jwt-secret-key>
     export JWT_ACCESS_EXP=3
 
+    # Cache environment variables
+    export MEMCACHED_CONNS=<host>:<port>,<host>:<port>
+
     # Test environment variables
     export TEST_DB_ADDR=postgres://<user>:<password>@<host>:<port>/<dbName>_test?sslmode=disable
     ```
