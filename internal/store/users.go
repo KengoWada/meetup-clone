@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/KengoWada/meetup-clone/internal"
@@ -103,95 +104,6 @@ func (s *UserStore) Deactivate(ctx context.Context, user *models.User) error {
 	timeNow := time.Now().UTC().Format(internal.DateTimeFormat)
 	user.ActivatedAt = &timeNow
 	return s.deactivateInActiveUser(ctx, user)
-}
-
-// GetByEmail retrieves a user from the database by their email address.
-func (s *UserStore) GetByID(ctx context.Context, ID int) (*models.User, error) {
-	query := `
-		SELECT u.*, up.* FROM users u
-		INNER JOIN user_profiles up
-		ON u.id = up.user_id
-		WHERE u.id = $1 AND u.deleted_at IS NULL
-	`
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
-	defer cancel()
-
-	user := models.User{UserProfile: &models.UserProfile{}}
-	err := s.db.
-		QueryRowContext(ctx, query, ID).
-		Scan(
-			&user.ID,
-			&user.Email,
-			&user.Password,
-			&user.IsActive,
-			&user.ActivatedAt,
-			&user.Role,
-			&user.PasswordResetToken,
-			&user.Version,
-			&user.CreatedAt,
-			&user.UpdatedAt,
-			&user.DeletedAt,
-			&user.UserProfile.ID,
-			&user.UserProfile.Username,
-			&user.UserProfile.ProfilePic,
-			&user.UserProfile.DateOfBirth,
-			&user.UserProfile.UserID,
-			&user.UserProfile.Version,
-			&user.UserProfile.CreatedAt,
-			&user.UserProfile.UpdatedAt,
-			&user.UserProfile.DeletedAt,
-		)
-
-	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			return nil, ErrNotFound
-		default:
-			return nil, err
-		}
-	}
-
-	return &user, nil
-}
-
-// GetByEmail retrieves a user from the database by their email address.
-// It returns the user object if a matching user is found, or nil and an error
-// if no user is found or if an issue occurs during the query.
-func (s *UserStore) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-	query := `
-		SELECT * FROM users
-		WHERE email = $1 AND deleted_at IS NULL
-	`
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
-	defer cancel()
-
-	user := models.User{}
-	err := s.db.
-		QueryRowContext(ctx, query, email).
-		Scan(
-			&user.ID,
-			&user.Email,
-			&user.Password,
-			&user.IsActive,
-			&user.ActivatedAt,
-			&user.Role,
-			&user.PasswordResetToken,
-			&user.Version,
-			&user.CreatedAt,
-			&user.UpdatedAt,
-			&user.DeletedAt,
-		)
-
-	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			return nil, ErrNotFound
-		default:
-			return nil, err
-		}
-	}
-
-	return &user, nil
 }
 
 // ResetPassword updates a user's password in the database.
@@ -532,19 +444,122 @@ func (s *UserStore) SoftDeleteUser(ctx context.Context, user *models.User) error
 	return nil
 }
 
-func (s *UserStore) GetByIDIcludeDeleted(ctx context.Context, ID int) (*models.User, error) {
-	query := `
-		SELECT u.*, up.* FROM users u
-		INNER JOIN user_profiles up
-		ON u.id = up.user_id
-		WHERE u.id = $1
-	`
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
-	defer cancel()
+// Get fetches a user row from the database based on the provided conditions.
+//
+// This function retrieves a user record by matching specified fields and values.
+// If isDeleted is false, only rows where deleted_at is NULL are returned, meaning only active users are included.
+// When isDeleted is true, the deleted_at condition is ignored, and all matching rows (including soft-deleted ones) are returned.
+//
+// Parameters:
+//   - ctx (context.Context): The context for managing request deadlines and cancellations.
+//   - isDeleted (bool): Controls whether to include soft-deleted users.
+//     false: Excludes rows where deleted_at is NOT NULL (active users only).
+//     true: Includes all rows, regardless of deleted_at status.
+//   - fields ([]string): A slice of field names to match in the WHERE clause.
+//   - values ([]any): A slice of values corresponding to the fields in the WHERE clause.
+//     The length and order of values must match the fields slice.
+//
+// Returns:
+//   - *models.User: The fetched user record, or nil if no matching record is found.
+//   - error: An error if the query fails or if fields and values lengths do not match.
+//
+// Example usage:
+//
+//	user, err := userStore.Get(ctx, false, []string{"email"}, []any{"user@example.com"})
+//	if err != nil {
+//	    log.Fatalf("Failed to fetch user: %v", err)
+//	}
+func (s *UserStore) Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.User, error) {
+	var queryConditions []string
+	for index, field := range fields {
+		queryField := fmt.Sprintf("%s = $%d", field, index+1)
+		queryConditions = append(queryConditions, queryField)
+	}
+
+	if !isDeleted {
+		queryConditions = append(queryConditions, "deleted_at IS NULL")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM users WHERE %s", strings.Join(queryConditions, " AND "))
+
+	var user = models.User{}
+	err := s.db.QueryRowContext(ctx, query, values...).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Password,
+		&user.IsActive,
+		&user.ActivatedAt,
+		&user.Role,
+		&user.PasswordResetToken,
+		&user.Version,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.DeletedAt,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
+
+// GetWithProfile fetches a user row along with the associated user profile from the database.
+//
+// This function retrieves a user record by matching specified fields and values, and it automatically joins
+// the user_profile table to return profile details as well. The isDeleted parameter controls whether
+// to include soft-deleted users.
+//
+// Parameters:
+//   - ctx (context.Context): The context for managing request deadlines and cancellations.
+//   - isDeleted (bool): Controls whether to include soft-deleted users.
+//     false: Excludes rows where deleted_at is NOT NULL (active users only).
+//     true: Includes all rows, regardless of deleted_at status.
+//   - fields ([]string): A slice of field names to match in the WHERE clause.
+//   - values ([]any): A slice of values corresponding to the fields in the WHERE clause.
+//     The length and order of values must match the fields slice.
+//
+// Returns:
+//   - *models.User: The fetched user record, including the related user profile.
+//   - error: An error if the query fails or if fields and values lengths do not match.
+//
+// Example usage:
+//
+//	user, err := userStore.GetWithProfile(ctx, false, []string{"email"}, []any{"user@example.com"})
+//	if err != nil {
+//	    log.Fatalf("Failed to fetch user with profile: %v", err)
+//	}
+//
+// The returned User struct should include the Profile field, fully populated.
+func (s *UserStore) GetWithProfile(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.User, error) {
+	var queryConditions []string
+	for index, field := range fields {
+		queryField := fmt.Sprintf("u.%s = $%d", field, index+1)
+		queryConditions = append(queryConditions, queryField)
+	}
+
+	if !isDeleted {
+		queryConditions = append(queryConditions, "u.deleted_at IS NULL")
+	}
+
+	query := fmt.Sprintf(
+		`
+			SELECT u.*, up.* FROM users u
+			INNER JOIN user_profiles up
+			ON u.id = up.user_id
+			WHERE %s
+		`,
+		strings.Join(queryConditions, " AND "),
+	)
 
 	user := models.User{UserProfile: &models.UserProfile{}}
 	err := s.db.
-		QueryRowContext(ctx, query, ID).
+		QueryRowContext(ctx, query, values...).
 		Scan(
 			&user.ID,
 			&user.Email,

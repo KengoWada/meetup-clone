@@ -32,7 +32,8 @@ func (h *Handler) deactivateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.store.Users.GetByIDIcludeDeleted(r.Context(), int(userID))
+	fields, values := []string{"id"}, []any{userID}
+	user, err := h.store.Users.Get(r.Context(), true, fields, values)
 	if err != nil {
 		errorMessage := response.ErrorResponse{Message: "Invalid user ID"}
 		response.ErrorResponseBadRequest(w, r, err, errorMessage)

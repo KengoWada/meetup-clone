@@ -55,7 +55,8 @@ func TestDeleteUser(t *testing.T) {
 		}
 		assert.Equal(t, http.StatusOK, response.StatusCode())
 
-		_, err = appItems.App.Store.Users.GetByID(ctx, int(testUser.ID))
+		fields, values := []string{"id"}, []any{testUser.ID}
+		_, err = appItems.App.Store.Users.GetWithProfile(ctx, false, fields, values)
 		assert.NotNil(t, err)
 		assert.Equal(t, store.ErrNotFound, err)
 	})
@@ -71,7 +72,8 @@ func TestDeleteUser(t *testing.T) {
 		}
 		assert.Equal(t, http.StatusUnauthorized, response.StatusCode())
 
-		user, err := appItems.App.Store.Users.GetByID(ctx, int(testUser.ID))
+		fields, values := []string{"id"}, []any{testUser.ID}
+		user, err := appItems.App.Store.Users.GetWithProfile(ctx, false, fields, values)
 		assert.Nil(t, err)
 		assert.Nil(t, user.DeletedAt)
 	})

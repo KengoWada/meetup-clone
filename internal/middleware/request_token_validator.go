@@ -78,7 +78,8 @@ func JWTMiddleware(jwtAuthenticator auth.Authenticator, appStore store.Store, ca
 
 func getUser(ctx context.Context, ID int64, appStore store.Store, cacheStore cache.Store) (*models.User, error) {
 	if !cfg.CacheConfig.Enabled {
-		return appStore.Users.GetByID(ctx, int(ID))
+		fields, values := []string{"id"}, []any{ID}
+		return appStore.Users.GetWithProfile(ctx, false, fields, values)
 	}
 
 	user, err := cacheStore.Users.Get(ID)
@@ -90,13 +91,13 @@ func getUser(ctx context.Context, ID int64, appStore store.Store, cacheStore cac
 		return user, nil
 	}
 
-	user, err = appStore.Users.GetByID(ctx, int(ID))
+	fields, values := []string{"id"}, []any{ID}
+	user, err = appStore.Users.GetWithProfile(ctx, false, fields, values)
 	if err != nil {
 		return nil, err
 	}
 
-	err = cacheStore.Users.Set(user)
-	if err != nil {
+	if err := cacheStore.Users.Set(user); err != nil {
 		return nil, err
 	}
 

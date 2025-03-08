@@ -62,7 +62,8 @@ func (h *Handler) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	errorMessage := response.ErrorResponse{Message: "Invalid credentials"}
 
-	user, err := h.store.Users.GetByEmail(r.Context(), payload.Email)
+	fields, values := []string{"email"}, []any{payload.Email}
+	user, err := h.store.Users.Get(r.Context(), false, fields, values)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:

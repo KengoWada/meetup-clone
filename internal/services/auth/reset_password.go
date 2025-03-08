@@ -73,7 +73,8 @@ func (h *Handler) resetUserPassword(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	errorMessage := response.ErrorResponse{Message: "Password reset token is invalid"}
 
-	user, err := h.store.Users.GetByEmail(ctx, timedToken.Body)
+	fields, values := []string{"email"}, []any{timedToken.Body}
+	user, err := h.store.Users.Get(ctx, false, fields, values)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -146,7 +147,8 @@ func (h *Handler) passwordResetRequest(w http.ResponseWriter, r *http.Request) {
 	const message = "Email has been sent."
 	var ctx = r.Context()
 
-	user, err := h.store.Users.GetByEmail(ctx, payload.Email)
+	fields, values := []string{"email"}, []any{payload.Email}
+	user, err := h.store.Users.Get(ctx, false, fields, values)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:

@@ -25,13 +25,12 @@ type Store struct {
 		Create(context.Context, *models.User, *models.UserProfile) error
 		Activate(context.Context, *models.User) error
 		Deactivate(context.Context, *models.User) error
-		GetByEmail(ctx context.Context, email string) (*models.User, error)
-		GetByID(ctx context.Context, ID int) (*models.User, error)
-		GetByIDIcludeDeleted(ctx context.Context, ID int) (*models.User, error)
 		ResetPassword(context.Context, *models.User) error
 		SetPasswordResetToken(context.Context, *models.User) error
 		UpdateUserDetails(ctx context.Context, user *models.User) error
 		SoftDeleteUser(ctx context.Context, user *models.User) error
+		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.User, error)
+		GetWithProfile(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.User, error)
 	}
 }
 

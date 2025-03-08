@@ -61,7 +61,8 @@ func (h *Handler) activateUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	errorMessage := response.ErrorResponse{Message: "Activation token is invalid"}
 
-	user, err := h.store.Users.GetByEmail(ctx, timedToken.Body)
+	fields, values := []string{"email"}, []any{timedToken.Body}
+	user, err := h.store.Users.Get(r.Context(), false, fields, values)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -125,7 +126,8 @@ func (h *Handler) resendVerificationEmail(w http.ResponseWriter, r *http.Request
 
 	const responseMessage = "Email has been sent"
 
-	user, err := h.store.Users.GetByEmail(r.Context(), payload.Email)
+	fields, values := []string{"email"}, []any{payload.Email}
+	user, err := h.store.Users.Get(r.Context(), false, fields, values)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
