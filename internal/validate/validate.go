@@ -18,6 +18,7 @@ func Get() *validator.Validate {
 		Validate = validator.New(validator.WithRequiredStructEnabled())
 		Validate.RegisterValidation("is_date", dateValidator)
 		Validate.RegisterValidation("is_password", passwordValidator)
+		Validate.RegisterValidation("is_org_name", orgNameValidator)
 	})
 
 	return Validate

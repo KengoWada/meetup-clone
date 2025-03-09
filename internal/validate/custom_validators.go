@@ -1,11 +1,21 @@
 package validate
 
 import (
+	"regexp"
 	"slices"
+	"time"
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
 )
+
+// dateValidator is a custom validation function that checks if the date
+// provided matches the required format of `mm/dd/yyyy`. It returns true
+// if the date matches the format, and false otherwise.
+func dateValidator(fl validator.FieldLevel) bool {
+	_, err := time.Parse("01/02/2006", fl.Field().String())
+	return err == nil
+}
 
 // passwordValidator is a custom validation function that checks if a password
 // meets the following criteria:
@@ -51,4 +61,11 @@ func passwordValidator(fl validator.FieldLevel) bool {
 	}
 
 	return hasNumber && hasUpperCase && hasLowerCase && hasSpecialCharacter
+}
+
+// orgName is a custom validator function for validating organization names.
+// It checks if the field value contains only letters, numbers, and spaces.
+func orgNameValidator(fl validator.FieldLevel) bool {
+	r, _ := regexp.Compile(`^[A-Za-z0-9 ]+$`)
+	return r.MatchString(fl.Field().String())
 }
