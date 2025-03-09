@@ -32,11 +32,15 @@ type Store struct {
 		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.User, error)
 		GetWithProfile(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.User, error)
 	}
+	Organizations interface {
+		Create(ctx context.Context, organization *models.Organization, role *models.Role, member *models.OrganizationMember) error
+	}
 }
 
 func NewStore(db *sql.DB) Store {
 	return Store{
-		Users: &UserStore{db},
+		Users:         &UserStore{db},
+		Organizations: &OrganizationStore{db},
 	}
 }
 
