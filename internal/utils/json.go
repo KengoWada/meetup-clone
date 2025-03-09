@@ -3,7 +3,43 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
+
+// TrimString is a custom string type that trims leading and trailing whitespace
+// from JSON string inputs during deserialization.
+//
+// This type is useful for automatically cleaning up user inputs or any string fields
+// that may accidentally include unnecessary spaces.
+//
+// Example:
+//
+//	jsonData := `{"name": "  John Doe  "}`
+//	After unmarshaling, the name will be "John Doe" without extra spaces.
+type TrimString string
+
+// UnmarshalJSON implements the json.Unmarshaler interface for TrimString.
+// It trims any leading and trailing whitespace from the input string during deserialization.
+//
+// Parameters:
+//   - data ([]byte): The raw JSON data to be unmarshaled.
+//
+// Returns:
+//   - error: An error if the input data cannot be unmarshaled as a string, otherwise nil.
+//
+// Example usage:
+//
+//	var name TrimString
+//	err := json.Unmarshal([]byte(`"  Example Name  "`), &name)
+//	fmt.Println(name) // Output: "Example Name"
+func (t *TrimString) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*t = TrimString(strings.TrimSpace(s))
+	return nil
+}
 
 // ReadJSON reads the JSON request body from the HTTP request and unmarshals it into
 // the provided data object. It ensures that no unknown fields are included in the
