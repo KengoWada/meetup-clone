@@ -145,7 +145,7 @@ func TestCreateOrganization(t *testing.T) {
 
 	t.Run("should not create organization with unknown field", func(t *testing.T) {
 		testUser := createTestUser(true)
-		unknownField := "unknownField"
+		unknownField := "fakeField"
 		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, true)}
 		payload := testutils.TestRequestData{
 			"name":        faker.Username(options.WithGenerateUniqueValues(true)),

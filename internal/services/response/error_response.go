@@ -1,6 +1,9 @@
 package response
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -87,4 +90,46 @@ func ErrorResponseUnauthorized(w http.ResponseWriter, r *http.Request, err error
 
 	response := ErrorResponse{Message: "unauthorized"}
 	utils.WriteJSON(w, http.StatusUnauthorized, response)
+}
+
+func ErrorResponseInvalidJSON(w http.ResponseWriter, r *http.Request, err error) {
+	var (
+		status             int            = http.StatusBadRequest
+		errorsResponse     ErrorsResponse = ErrorsResponse{}
+		errorMessage       string
+		syntaxError        *json.SyntaxError
+		unmarshalTypeError *json.UnmarshalTypeError
+		maxBytesError      *http.MaxBytesError
+	)
+	switch {
+	case errors.As(err, &syntaxError):
+		errorMessage = fmt.Sprintf("Request body contains badly-formed JSON (at position %d)", syntaxError.Offset)
+
+	case errors.Is(err, io.ErrUnexpectedEOF):
+		errorMessage = fmt.Sprintf("Request body contains badly-formed JSON (at position %d)", syntaxError.Offset)
+
+	case errors.As(err, &unmarshalTypeError):
+		errorMessage = fmt.Sprintf("Request body contains an invalid value for the %q field (at position %d)", unmarshalTypeError.Field, unmarshalTypeError.Offset)
+
+	case strings.HasPrefix(err.Error(), "json: unknown field "):
+		ErrorResponseUnknownField(w, r, err)
+		return
+
+	case errors.Is(err, io.EOF):
+		errorMessage = "Request body must not be empty"
+
+	case errors.As(err, &maxBytesError):
+		errorMessage = fmt.Sprintf("Request body must not be larger than %d bytes", maxBytesError.Limit)
+
+	default:
+		status = http.StatusInternalServerError
+	}
+
+	if status == http.StatusInternalServerError {
+		ErrorResponseInternalServerErr(w, r, err)
+		return
+	}
+
+	errorResponse := ErrorResponse{Message: errorMessage, Errors: errorsResponse}
+	ErrorResponseBadRequest(w, r, err, errorResponse)
 }
