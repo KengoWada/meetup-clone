@@ -3,7 +3,6 @@ package auth
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/KengoWada/meetup-clone/internal/services/response"
@@ -38,11 +37,7 @@ func (h *Handler) activateUser(w http.ResponseWriter, r *http.Request) {
 	var payload activateUserPayload
 	err := utils.ReadJSON(w, r, &payload)
 	if err != nil {
-		if strings.Contains(err.Error(), "json: unknown field") {
-			response.ErrorResponseUnknownField(w, r, err)
-			return
-		}
-		response.ErrorResponseInternalServerErr(w, r, err)
+		response.ErrorResponseInvalidJSON(w, r, err)
 		return
 	}
 
@@ -104,11 +99,7 @@ func (h *Handler) resendVerificationEmail(w http.ResponseWriter, r *http.Request
 	var payload resendVerificationEmailPayload
 	err := utils.ReadJSON(w, r, &payload)
 	if err != nil {
-		if strings.Contains(err.Error(), "json: unknown field") {
-			response.ErrorResponseUnknownField(w, r, err)
-			return
-		}
-		response.ErrorResponseInternalServerErr(w, r, err)
+		response.ErrorResponseInvalidJSON(w, r, err)
 		return
 	}
 
