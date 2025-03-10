@@ -66,6 +66,33 @@ definitions:
     - password
     - token
     type: object
+  organizations.createOrganizationPayload:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      profilePic:
+        type: string
+    required:
+    - description
+    - name
+    - profilePic
+    type: object
+  organizations.orgResponse:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      profilePic:
+        type: string
+    type: object
   profiles.userProfile:
     properties:
       dateOfBirth:
@@ -368,6 +395,42 @@ paths:
       summary: Deactivate a user
       tags:
       - auth
+  /organizations:
+    post:
+      consumes:
+      - application/json
+      description: Create an organization
+      parameters:
+      - description: create organization payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/organizations.createOrganizationPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: organization successfully created
+          schema:
+            $ref: '#/definitions/organizations.orgResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Create an organization
+      tags:
+      - organizations
   /profiles/:
     delete:
       consumes:

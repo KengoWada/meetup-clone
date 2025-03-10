@@ -373,6 +373,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/organizations": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create an organization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Create an organization",
+                "parameters": [
+                    {
+                        "description": "create organization payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/organizations.createOrganizationPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "organization successfully created",
+                        "schema": {
+                            "$ref": "#/definitions/organizations.orgResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
+        },
         "/profiles/": {
             "get": {
                 "security": [
@@ -594,6 +651,46 @@ const docTemplate = `{
                     "minLength": 10
                 },
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "organizations.createOrganizationPayload": {
+            "type": "object",
+            "required": [
+                "description",
+                "name",
+                "profilePic"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "profilePic": {
+                    "type": "string"
+                }
+            }
+        },
+        "organizations.orgResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profilePic": {
                     "type": "string"
                 }
             }

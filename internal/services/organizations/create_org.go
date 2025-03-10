@@ -25,6 +25,20 @@ type orgResponse struct {
 	CreatedAt   string `json:"createdAt"`
 }
 
+// CreateOrganization godoc
+//
+//	@Summary		Create an organization
+//	@Description	Create an organization
+//	@Tags			organizations
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		createOrganizationPayload	true	"create organization payload"
+//	@Success		201		{object}	orgResponse					"organization successfully created"
+//	@Failure		400		{object}	response.DocsErrorResponse
+//	@Failure		401		{object}	response.DocsErrorResponseUnauthorized
+//	@Failure		500		{object}	response.DocsErrorResponseInternalServerErr
+//	@Security		ApiKeyAuth
+//	@Router			/organizations [post]
 func (h *Handler) createOrganization(w http.ResponseWriter, r *http.Request) {
 	var payload createOrganizationPayload
 	err := utils.ReadJSON(w, r, &payload)
