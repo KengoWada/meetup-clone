@@ -2,8 +2,15 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"strings"
+)
+
+var (
+	ErrNotJSONType = errors.New("content-type header is not application/json")
+	ErrInvalidJSON = errors.New("invalid JSON")
 )
 
 // TrimString is a custom string type that trims leading and trailing whitespace
@@ -56,13 +63,32 @@ func (t *TrimString) UnmarshalJSON(data []byte) error {
 // Errors:
 //   - Returns an error if unknown fields are encountered in the JSON body or if unmarshalling fails.
 func ReadJSON(w http.ResponseWriter, r *http.Request, data any) error {
-	maxBytes := 1_048_578
-	http.MaxBytesReader(w, r.Body, int64(maxBytes))
+	contentType := r.Header.Get("Content-Type")
+	if contentType == "" {
+		return ErrNotJSONType
+	}
+
+	mediaType := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	if mediaType != "application/json" {
+		return ErrNotJSONType
+	}
+
+	const maxBytes int64 = 1_048_578
+	r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	return decoder.Decode(data)
+	if err := decoder.Decode(data); err != nil {
+		return err
+	}
+
+	err := decoder.Decode(&struct{}{})
+	if !errors.Is(err, io.EOF) {
+		return ErrInvalidJSON
+	}
+
+	return nil
 }
 
 // WriteJSON writes the given data as a JSON response with the specified HTTP status code.
