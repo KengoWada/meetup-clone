@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/lib/pq"
@@ -34,6 +35,34 @@ func (s *OrganizationStore) Create(ctx context.Context, organization *models.Org
 
 		return nil
 	})
+}
+
+func (s *OrganizationStore) Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Organization, error) {
+	query := fmt.Sprintf("SELECT * FROM organizations WHERE %s", generateQueryConditions(isDeleted, fields))
+
+	var organization = models.Organization{}
+	err := s.db.QueryRowContext(ctx, query, values...).Scan(
+		&organization.ID,
+		&organization.Name,
+		&organization.Description,
+		&organization.ProfilePic,
+		&organization.IsActive,
+		&organization.Version,
+		&organization.CreatedAt,
+		&organization.UpdatedAt,
+		&organization.DeletedAt,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &organization, nil
 }
 
 func createOrganization(ctx context.Context, tx *sql.Tx, organization *models.Organization) error {
