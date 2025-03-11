@@ -27,11 +27,17 @@ type Store struct {
 		Set(user *models.User) error
 		Delete(ID int64) error
 	}
+	Organizations interface {
+		Get(ID int64) (*models.Organization, error)
+		Set(organization *models.Organization) error
+		Delete(ID int64) error
+	}
 }
 
 func NewCacheStore(memcached *memcache.Client) Store {
 	return Store{
-		Users: &UserStore{cacheDB: memcached},
+		Users:         &UserStore{cacheDB: memcached},
+		Organizations: &OrganizationStore{cacheDB: memcached},
 	}
 }
 
