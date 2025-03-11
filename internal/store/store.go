@@ -36,6 +36,8 @@ type Store struct {
 	}
 	Organizations interface {
 		Create(ctx context.Context, organization *models.Organization, role *models.Role, member *models.OrganizationMember) error
+		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Organization, error)
+		Update(ctx context.Context, organization *models.Organization) error
 	}
 }
 
