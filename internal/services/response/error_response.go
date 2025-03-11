@@ -92,6 +92,19 @@ func ErrorResponseUnauthorized(w http.ResponseWriter, r *http.Request, err error
 	utils.WriteJSON(w, http.StatusUnauthorized, response)
 }
 
+func ErrorResponseForbidden(w http.ResponseWriter, r *http.Request, err error) {
+	reqIDRaw := middleware.GetReqID(r.Context())
+	log.Warn().
+		Str("requestID", reqIDRaw).
+		Str("method", r.Method).
+		Str("url", r.URL.Path).
+		Err(errors.Wrap(err, "forbidden")).
+		Msg("Forbidden")
+
+	response := ErrorResponse{Message: "forbidden"}
+	utils.WriteJSON(w, http.StatusForbidden, response)
+}
+
 func ErrorResponseInvalidJSON(w http.ResponseWriter, r *http.Request, err error) {
 	var (
 		status             int            = http.StatusBadRequest
