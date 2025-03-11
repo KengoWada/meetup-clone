@@ -39,12 +39,16 @@ type Store struct {
 		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Organization, error)
 		Update(ctx context.Context, organization *models.Organization) error
 	}
+	Roles interface {
+		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Role, error)
+	}
 }
 
 func NewStore(db *sql.DB) Store {
 	return Store{
 		Users:         &UserStore{db},
 		Organizations: &OrganizationStore{db},
+		Roles:         &RoleStore{db},
 	}
 }
 
