@@ -3,6 +3,7 @@ package internal
 import "time"
 
 type userKey string
+type orgKey string
 
 const (
 	DateTimeFormat = time.RFC3339
@@ -10,6 +11,7 @@ const (
 	DateFormat = "01/02/2006"
 
 	UserCtx userKey = "user"
+	OrgCtx  orgKey  = "organization"
 
 	// Event permissions
 	EventCreate  = "create_event"
