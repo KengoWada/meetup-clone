@@ -8,6 +8,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
@@ -64,4 +66,18 @@ func WithTx(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
 	}
 
 	return tx.Commit()
+}
+
+func generateQueryConditions(isDeleted bool, fields []string) string {
+	var queryConditions []string
+	for index, field := range fields {
+		queryField := fmt.Sprintf("%s = $%d", field, index+1)
+		queryConditions = append(queryConditions, queryField)
+	}
+
+	if !isDeleted {
+		queryConditions = append(queryConditions, "deleted_at IS NULL")
+	}
+
+	return strings.Join(queryConditions, " AND ")
 }
