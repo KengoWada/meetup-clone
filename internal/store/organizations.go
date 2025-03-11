@@ -65,6 +65,41 @@ func (s *OrganizationStore) Get(ctx context.Context, isDeleted bool, fields []st
 	return &organization, nil
 }
 
+func (s *OrganizationStore) Update(ctx context.Context, organization *models.Organization) error {
+	query := `
+		UPDATE organizations
+		SET name = $1, description = $2, profile_pic = $3, version = version + 1
+		WHERE id = $4 AND version = $5
+		RETURNING version, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		organization.Name,
+		organization.Description,
+		organization.ProfilePic,
+		organization.ID,
+		organization.Version,
+	).Scan(
+		&organization.Version,
+		&organization.UpdatedAt,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
 func createOrganization(ctx context.Context, tx *sql.Tx, organization *models.Organization) error {
 	query := `
 		INSERT INTO organizations(name, description, profile_pic)
