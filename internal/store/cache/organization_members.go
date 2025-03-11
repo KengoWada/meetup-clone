@@ -12,10 +12,12 @@ type OrganizationMemberStore struct {
 	cacheDB *memcache.Client
 }
 
-func (s *OrganizationMemberStore) Get(userID, orgID int64) (*models.OrganizationMember, error) {
-	cacheKey := fmt.Sprintf("%s:%d,%d", CacheKeyOrgMember, userID, orgID)
+func (s *OrganizationMemberStore) getCacheKey(userID, orgID int64) string {
+	return fmt.Sprintf("%s:%d,%d", CacheKeyOrgMember, userID, orgID)
+}
 
-	item, err := getFromCache(s.cacheDB, cacheKey)
+func (s *OrganizationMemberStore) Get(userID, orgID int64) (*models.OrganizationMember, error) {
+	item, err := getFromCache(s.cacheDB, s.getCacheKey(userID, orgID))
 	if err != nil {
 		return nil, err
 	}
@@ -33,14 +35,16 @@ func (s *OrganizationMemberStore) Get(userID, orgID int64) (*models.Organization
 }
 
 func (s *OrganizationMemberStore) Set(member *models.OrganizationMember) error {
-	cacheKey := fmt.Sprintf("%s:%d,%d", CacheKeyOrgMember, member.UserProfileID, member.OrganizationID)
-
-	orgBytes, err := json.Marshal(member)
+	orgMemberBytes, err := json.Marshal(member)
 	if err != nil {
 		return err
 	}
 
-	roleItem := &memcache.Item{Key: cacheKey, Value: orgBytes, Expiration: CacheTTLOrg}
+	roleItem := &memcache.Item{
+		Key:        s.getCacheKey(member.UserProfileID, member.OrganizationID),
+		Value:      orgMemberBytes,
+		Expiration: CacheTTLOrg,
+	}
 	if err := s.cacheDB.Set(roleItem); err != nil {
 		return err
 	}
@@ -49,9 +53,7 @@ func (s *OrganizationMemberStore) Set(member *models.OrganizationMember) error {
 }
 
 func (s *OrganizationMemberStore) Delete(userID, orgID int64) error {
-	cacheKey := fmt.Sprintf("%s:%d,%d", CacheKeyOrgMember, userID, orgID)
-
-	err := s.cacheDB.Delete(cacheKey)
+	err := s.cacheDB.Delete(s.getCacheKey(userID, orgID))
 	if err != nil && err != memcache.ErrCacheMiss {
 		return err
 	}

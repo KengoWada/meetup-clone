@@ -12,16 +12,18 @@ type UserStore struct {
 	cacheDB *memcache.Client
 }
 
+func (s *UserStore) getCacheKey(ID int64) string {
+	return fmt.Sprintf("%s:%d", CacheKeyUser, ID)
+}
+
 func (s *UserStore) Get(ID int64) (*models.User, error) {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyUser, ID)
-
-	item, err := s.cacheDB.Get(cacheKey)
+	item, err := getFromCache(s.cacheDB, s.getCacheKey(ID))
 	if err != nil {
-		if err == memcache.ErrCacheMiss {
-			return nil, nil
-		}
-
 		return nil, err
+	}
+
+	if item == nil {
+		return nil, nil
 	}
 
 	var user models.User
@@ -33,14 +35,16 @@ func (s *UserStore) Get(ID int64) (*models.User, error) {
 }
 
 func (s *UserStore) Set(user *models.User) error {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyUser, user.ID)
-
 	userBytes, err := json.Marshal(user)
 	if err != nil {
 		return err
 	}
 
-	userItem := &memcache.Item{Key: cacheKey, Value: userBytes, Expiration: CacheTTLUser}
+	userItem := &memcache.Item{
+		Key:        s.getCacheKey(user.ID),
+		Value:      userBytes,
+		Expiration: CacheTTLUser,
+	}
 	if err := s.cacheDB.Set(userItem); err != nil {
 		return err
 	}
@@ -49,9 +53,7 @@ func (s *UserStore) Set(user *models.User) error {
 }
 
 func (s *UserStore) Delete(ID int64) error {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyUser, ID)
-
-	err := s.cacheDB.Delete(cacheKey)
+	err := s.cacheDB.Delete(s.getCacheKey(ID))
 	if err != nil && err != memcache.ErrCacheMiss {
 		return err
 	}

@@ -12,10 +12,12 @@ type OrganizationStore struct {
 	cacheDB *memcache.Client
 }
 
-func (s *OrganizationStore) Get(ID int64) (*models.Organization, error) {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyOrg, ID)
+func (s *OrganizationStore) getCacheKey(ID int64) string {
+	return fmt.Sprintf("%s:%d", CacheKeyOrg, ID)
+}
 
-	item, err := getFromCache(s.cacheDB, cacheKey)
+func (s *OrganizationStore) Get(ID int64) (*models.Organization, error) {
+	item, err := getFromCache(s.cacheDB, s.getCacheKey(ID))
 	if err != nil {
 		return nil, err
 	}
@@ -33,14 +35,16 @@ func (s *OrganizationStore) Get(ID int64) (*models.Organization, error) {
 }
 
 func (s *OrganizationStore) Set(organization *models.Organization) error {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyOrg, organization.ID)
-
 	orgBytes, err := json.Marshal(organization)
 	if err != nil {
 		return err
 	}
 
-	orgItem := &memcache.Item{Key: cacheKey, Value: orgBytes, Expiration: CacheTTLOrg}
+	orgItem := &memcache.Item{
+		Key:        s.getCacheKey(organization.ID),
+		Value:      orgBytes,
+		Expiration: CacheTTLOrg,
+	}
 	if err := s.cacheDB.Set(orgItem); err != nil {
 		return err
 	}
@@ -49,9 +53,7 @@ func (s *OrganizationStore) Set(organization *models.Organization) error {
 }
 
 func (s *OrganizationStore) Delete(ID int64) error {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyOrg, ID)
-
-	err := s.cacheDB.Delete(cacheKey)
+	err := s.cacheDB.Delete(s.getCacheKey(ID))
 	if err != nil && err != memcache.ErrCacheMiss {
 		return err
 	}

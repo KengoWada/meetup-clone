@@ -12,10 +12,12 @@ type RoleStore struct {
 	cacheDB *memcache.Client
 }
 
-func (s *RoleStore) Get(ID int64) (*models.Role, error) {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyRole, ID)
+func (s *RoleStore) getCacheKey(ID int64) string {
+	return fmt.Sprintf("%s:%d", CacheKeyRole, ID)
+}
 
-	item, err := getFromCache(s.cacheDB, cacheKey)
+func (s *RoleStore) Get(ID int64) (*models.Role, error) {
+	item, err := getFromCache(s.cacheDB, s.getCacheKey(ID))
 	if err != nil {
 		return nil, err
 	}
@@ -33,14 +35,16 @@ func (s *RoleStore) Get(ID int64) (*models.Role, error) {
 }
 
 func (s *RoleStore) Set(role *models.Role) error {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyRole, role.ID)
-
-	orgBytes, err := json.Marshal(role)
+	roleBytes, err := json.Marshal(role)
 	if err != nil {
 		return err
 	}
 
-	roleItem := &memcache.Item{Key: cacheKey, Value: orgBytes, Expiration: CacheTTLOrg}
+	roleItem := &memcache.Item{
+		Key:        s.getCacheKey(role.ID),
+		Value:      roleBytes,
+		Expiration: CacheTTLOrg,
+	}
 	if err := s.cacheDB.Set(roleItem); err != nil {
 		return err
 	}
@@ -49,9 +53,7 @@ func (s *RoleStore) Set(role *models.Role) error {
 }
 
 func (s *RoleStore) Delete(ID int64) error {
-	cacheKey := fmt.Sprintf("%s:%d", CacheKeyRole, ID)
-
-	err := s.cacheDB.Delete(cacheKey)
+	err := s.cacheDB.Delete(s.getCacheKey(ID))
 	if err != nil && err != memcache.ErrCacheMiss {
 		return err
 	}
