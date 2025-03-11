@@ -1,7 +1,6 @@
 package profiles
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/KengoWada/meetup-clone/internal"
@@ -105,7 +104,6 @@ func (h *Handler) updateUserProfile(w http.ResponseWriter, r *http.Request) {
 			res := response.ErrorResponse{Message: "Try again later"}
 			response.ErrorResponseBadRequest(w, r, err, res)
 		default:
-			fmt.Println(err)
 			response.ErrorResponseInternalServerErr(w, r, err)
 		}
 		return
