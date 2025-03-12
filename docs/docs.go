@@ -430,6 +430,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/organizations/{orgID}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an organization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Update an organization",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "orgID to deactivate",
+                        "name": "orgID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "update organization payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/organizations.updateOrganizationPyload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "organization successfully updated",
+                        "schema": {
+                            "$ref": "#/definitions/organizations.orgResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseForbidden"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
+        },
         "/profiles/": {
             "get": {
                 "security": [
@@ -695,6 +765,26 @@ const docTemplate = `{
                 }
             }
         },
+        "organizations.updateOrganizationPyload": {
+            "type": "object",
+            "required": [
+                "description",
+                "name",
+                "profilePic"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "profilePic": {
+                    "type": "string"
+                }
+            }
+        },
         "profiles.userProfile": {
             "type": "object",
             "properties": {
@@ -735,6 +825,15 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "Invalid request body"
+                }
+            }
+        },
+        "response.DocsErrorResponseForbidden": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "forbidden"
                 }
             }
         },

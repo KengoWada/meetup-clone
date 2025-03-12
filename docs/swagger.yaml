@@ -93,6 +93,20 @@ definitions:
       profilePic:
         type: string
     type: object
+  organizations.updateOrganizationPyload:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      profilePic:
+        type: string
+    required:
+    - description
+    - name
+    - profilePic
+    type: object
   profiles.userProfile:
     properties:
       dateOfBirth:
@@ -120,6 +134,12 @@ definitions:
         type: object
       message:
         example: Invalid request body
+        type: string
+    type: object
+  response.DocsErrorResponseForbidden:
+    properties:
+      message:
+        example: forbidden
         type: string
     type: object
   response.DocsErrorResponseInternalServerErr:
@@ -429,6 +449,51 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create an organization
+      tags:
+      - organizations
+  /organizations/{orgID}:
+    put:
+      consumes:
+      - application/json
+      description: Update an organization
+      parameters:
+      - description: orgID to deactivate
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      - description: update organization payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/organizations.updateOrganizationPyload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: organization successfully updated
+          schema:
+            $ref: '#/definitions/organizations.orgResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseForbidden'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an organization
       tags:
       - organizations
   /profiles/:
