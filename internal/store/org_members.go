@@ -9,8 +9,28 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/models"
 )
 
+const createOrgMemberQuery = `
+	INSERT INTO organization_members(org_id, user_id, role_id)
+	VALUES($1, $2, $3)
+	RETURNING id, version, created_at, updated_at, deleted_at
+`
+
 type OrganizationMembersStore struct {
 	db *sql.DB
+}
+
+func (s *OrganizationMembersStore) Create(ctx context.Context, member *models.OrganizationMember) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	values := []any{member.OrganizationID, member.UserProfileID, member.RoleID}
+	return s.db.QueryRowContext(ctx, createOrgMemberQuery, values...).Scan(
+		&member.ID,
+		&member.Version,
+		&member.CreatedAt,
+		&member.UpdatedAt,
+		&member.DeletedAt,
+	)
 }
 
 func (s *OrganizationMembersStore) Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.OrganizationMember, error) {
@@ -51,4 +71,18 @@ func (s *OrganizationMembersStore) Get(ctx context.Context, isDeleted bool, fiel
 	}
 
 	return &member, nil
+}
+
+func createOrgMemberTx(ctx context.Context, tx *sql.Tx, member *models.OrganizationMember) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	values := []any{member.OrganizationID, member.UserProfileID, member.RoleID}
+	return tx.QueryRowContext(ctx, createOrgMemberQuery, values...).Scan(
+		&member.ID,
+		&member.Version,
+		&member.CreatedAt,
+		&member.UpdatedAt,
+		&member.DeletedAt,
+	)
 }
