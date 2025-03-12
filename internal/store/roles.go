@@ -10,8 +10,28 @@ import (
 	"github.com/lib/pq"
 )
 
+const createRoleQuery = `
+	INSERT INTO roles(name, description, org_id, permissions)
+	VALUES($1, $2, $3, $4)
+	RETURNING id, version, created_at, updated_at, deleted_at
+`
+
 type RoleStore struct {
 	db *sql.DB
+}
+
+func (s *RoleStore) Create(ctx context.Context, role *models.Role) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	values := []any{role.Name, role.Description, role.OrganizationID, pq.Array(role.Permissions)}
+	return s.db.QueryRowContext(ctx, createRoleQuery, values...).Scan(
+		&role.ID,
+		&role.Version,
+		&role.CreatedAt,
+		&role.UpdatedAt,
+		&role.DeletedAt,
+	)
 }
 
 func (s *RoleStore) Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Role, error) {
@@ -29,6 +49,8 @@ func (s *RoleStore) Get(ctx context.Context, isDeleted bool, fields []string, va
 		"SELECT * FROM roles WHERE %s",
 		strings.Join(queryConditions, " AND "),
 	)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
 
 	var role models.Role
 	err := s.db.QueryRowContext(ctx, query, values...).Scan(
@@ -53,4 +75,53 @@ func (s *RoleStore) Get(ctx context.Context, isDeleted bool, fields []string, va
 	}
 
 	return &role, nil
+}
+
+func (s *RoleStore) Update(ctx context.Context, role *models.Role) error {
+	query := `
+		UPDATE roles
+		SET name = $1, description = $2, permissions = $3, version = version + 1
+		WHERE id = $4 AND version = $5
+		RETURNING version, updated_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		role.Name,
+		role.Description,
+		pq.Array(role.Permissions),
+		role.ID,
+		role.Version,
+	).Scan(
+		&role.Version,
+		&role.UpdatedAt,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func createRoleTx(ctx context.Context, tx *sql.Tx, role *models.Role) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	values := []any{role.Name, role.Description, role.OrganizationID, pq.Array(role.Permissions)}
+	return tx.QueryRowContext(ctx, createRoleQuery, values...).Scan(
+		&role.ID,
+		&role.Version,
+		&role.CreatedAt,
+		&role.UpdatedAt,
+		&role.DeletedAt,
+	)
 }

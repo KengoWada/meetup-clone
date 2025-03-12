@@ -41,7 +41,9 @@ type Store struct {
 		Deactivate(ctx context.Context, organization *models.Organization) error
 	}
 	Roles interface {
+		Create(ctx context.Context, role *models.Role) error
 		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Role, error)
+		Update(ctx context.Context, role *models.Role) error
 	}
 	OrganizationMembers interface {
 		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.OrganizationMember, error)
