@@ -227,4 +227,25 @@ func TestUpdateOrganizationDetails(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 		assert.Equal(t, "Invalid organization ID", response.GetMessage())
 	})
+
+	t.Run("should not update org if org is deactivated", func(t *testing.T) {
+		testUser := createTestUser(true)
+		org := createTestOrg(false, generateRole("all"), testUser.UserProfile.ID)
+
+		endpoint := fmt.Sprintf("%s/%d", testEndpoint, org.ID)
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, true)}
+		newOrgName := faker.Username(options.WithGenerateUniqueValues(true))
+		payload := testutils.TestRequestData{
+			"name":        newOrgName,
+			"description": newOrgName + "description",
+			"profilePic":  testutils.TestProfilePic,
+		}
+
+		response, err := testutils.RunTestRequest(mux, testMethod, endpoint, headers, payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, http.StatusUnauthorized, response.StatusCode())
+		assert.Equal(t, "unauthorized", response.GetMessage())
+	})
 }
