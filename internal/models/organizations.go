@@ -8,6 +8,13 @@ type Organization struct {
 	IsActive    bool   `json:"isActive"`
 }
 
+type SimpleOrganization struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ProfilePic  string `json:"profilePic"`
+}
+
 type Role struct {
 	BaseModel
 	Name           string        `json:"name"`
