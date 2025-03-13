@@ -11,6 +11,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/logger"
 	"github.com/KengoWada/meetup-clone/internal/middleware"
 	"github.com/KengoWada/meetup-clone/internal/models"
+	"github.com/KengoWada/meetup-clone/internal/services/organizations/roles"
 	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/store/cache"
@@ -35,23 +36,27 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux.Post("/", h.createOrganization)
 	mux.Get("/", h.getUsersOrganizations)
 
-	mux.Route("/{orgID}", func(r chi.Router) {
-		r.Use(getOrganization(h.store, h.cacheStore))
+	mux.Route("/{orgID}", func(orgMux chi.Router) {
+		orgMux.Use(getOrganization(h.store, h.cacheStore))
 
-		r.Group(func(r chi.Router) {
+		orgMux.Group(func(r chi.Router) {
 			r.Use(middleware.IsStaffOrAdmin)
 			r.Patch("/", h.deactivateOrganization)
 		})
 
-		r.Get("/", h.getOrganization)
-		r.Put(
+		orgMux.Get("/", h.getOrganization)
+		orgMux.Put(
 			"/",
 			middleware.HasOrgPermission(internal.OrgUpdate, h.store, h.cacheStore, h.updateOrganization),
 		)
-		r.Delete(
+		orgMux.Delete(
 			"/",
 			middleware.HasOrgPermission(internal.OrgDelete, h.store, h.cacheStore, h.deleteOrganization),
 		)
+
+		rolesHandler := roles.NewHandler(h.store, h.cacheStore)
+		rolesMux := rolesHandler.RegisterRoutes()
+		orgMux.Mount("/roles", rolesMux)
 	})
 
 	return mux
