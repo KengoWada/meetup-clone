@@ -66,6 +66,17 @@ definitions:
     - password
     - token
     type: object
+  models.SimpleOrganization:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      profilePic:
+        type: string
+    type: object
   organizations.createOrganizationPayload:
     properties:
       description:
@@ -422,6 +433,36 @@ paths:
       tags:
       - auth
   /organizations:
+    get:
+      consumes:
+      - application/json
+      description: Get a users organizations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: organizations successfully fetched
+          schema:
+            items:
+              $ref: '#/definitions/models.SimpleOrganization'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a users organizations
+      tags:
+      - organizations
     post:
       consumes:
       - application/json
@@ -494,6 +535,44 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Delete an organization
+      tags:
+      - organizations
+    get:
+      consumes:
+      - application/json
+      description: Get an organization
+      parameters:
+      - description: orgID to fetch
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: organization successfully fetched
+          schema:
+            $ref: '#/definitions/organizations.orgResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseForbidden'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Get an organization
       tags:
       - organizations
     patch:
