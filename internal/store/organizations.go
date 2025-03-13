@@ -66,6 +66,43 @@ func (s *OrganizationStore) Get(ctx context.Context, isDeleted bool, fields []st
 	return &organization, nil
 }
 
+func (s *OrganizationStore) GetByUserID(ctx context.Context, userID int64) ([]*models.SimpleOrganization, error) {
+	query := `
+		SELECT o.id, o.name, o.description, o.profile_pic FROM organizations o
+		INNER JOIN organization_members m
+			ON o.id = m.org_id
+		WHERE m.user_id = $1 AND o.is_active = 't' AND o.deleted_at IS NULL AND m.deleted_at IS NULL
+		ORDER BY o.name ASC, o.created_at ASC
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var organizations []*models.SimpleOrganization
+	for rows.Next() {
+		var organization models.SimpleOrganization
+		err := rows.Scan(
+			&organization.ID,
+			&organization.Name,
+			&organization.Description,
+			&organization.ProfilePic,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		organizations = append(organizations, &organization)
+	}
+
+	return organizations, nil
+}
+
 func (s *OrganizationStore) Update(ctx context.Context, organization *models.Organization) error {
 	query := `
 		UPDATE organizations

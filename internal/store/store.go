@@ -37,6 +37,7 @@ type Store struct {
 	Organizations interface {
 		Create(ctx context.Context, organization *models.Organization, role *models.Role, member *models.OrganizationMember) error
 		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Organization, error)
+		GetByUserID(ctx context.Context, userID int64) ([]*models.SimpleOrganization, error)
 		Update(ctx context.Context, organization *models.Organization) error
 		Deactivate(ctx context.Context, organization *models.Organization) error
 		SoftDelete(ctx context.Context, organization *models.Organization) error
