@@ -159,6 +159,12 @@ definitions:
       message:
         type: string
     type: object
+  response.DocsSuccessResponseDoneMessage:
+    properties:
+      message:
+        example: Done
+        type: string
+    type: object
   response.DocsSuccessResponseLoginUser:
     properties:
       data:
@@ -452,12 +458,50 @@ paths:
       tags:
       - organizations
   /organizations/{orgID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an organization
+      parameters:
+      - description: orgID to delete
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: organization successfully deleted
+          schema:
+            $ref: '#/definitions/response.DocsSuccessResponseDoneMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseForbidden'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete an organization
+      tags:
+      - organizations
     put:
       consumes:
       - application/json
       description: Update an organization
       parameters:
-      - description: orgID to deactivate
+      - description: orgID to update
         in: path
         name: orgID
         required: true
