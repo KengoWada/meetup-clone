@@ -24,6 +24,13 @@ type Role struct {
 	Permissions    []string      `json:"permissions"`
 }
 
+type SimpleRole struct {
+	ID          int64    `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Permissions []string `json:"permissions"`
+}
+
 type OrganizationMember struct {
 	BaseModel
 	OrganizationID int64         `json:"organizationId"`
