@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/models"
 )
 
@@ -121,6 +123,35 @@ func (s *OrganizationStore) Deactivate(ctx context.Context, organization *models
 	)
 
 	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *OrganizationStore) SoftDelete(ctx context.Context, organization *models.Organization) error {
+	query := `
+		UPDATE organizations
+		SET deleted_at = $1, version = version + 1
+		WHERE id = $2 AND version = $3
+		RETURNING version, updated_at, deleted_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	values := []any{time.Now().UTC().Format(internal.DateTimeFormat), organization.ID, organization.Version}
+	err := s.db.QueryRowContext(ctx, query, values...).Scan(
+		&organization.Version,
+		&organization.UpdatedAt,
+		&organization.DeletedAt,
+	)
+	if err != nil {
+		fmt.Println(err)
 		switch err {
 		case sql.ErrNoRows:
 			return ErrNotFound

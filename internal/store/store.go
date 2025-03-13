@@ -39,6 +39,7 @@ type Store struct {
 		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Organization, error)
 		Update(ctx context.Context, organization *models.Organization) error
 		Deactivate(ctx context.Context, organization *models.Organization) error
+		SoftDelete(ctx context.Context, organization *models.Organization) error
 	}
 	Roles interface {
 		Create(ctx context.Context, role *models.Role) error
