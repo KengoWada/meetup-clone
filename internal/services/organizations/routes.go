@@ -32,6 +32,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux.Use(middleware.AuthenticatedRoute)
 
 	mux.Post("/", h.createOrganization)
+	mux.Get("/", h.getUsersOrganizations)
 
 	mux.Route("/{orgID}", func(r chi.Router) {
 		r.Use(getOrganization(h.store, h.cacheStore))
@@ -41,6 +42,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 			r.Patch("/", h.deactivateOrganization)
 		})
 
+		r.Get("/", h.getOrganization)
 		r.Put(
 			"/",
 			middleware.HasOrgPermission(internal.OrgUpdate, h.store, h.cacheStore, h.updateOrganization),
@@ -86,6 +88,12 @@ func getOrganization(appStore store.Store, cacheStore cache.Store) func(next htt
 						response.ErrorResponseInternalServerErr(w, r, err)
 					}
 					return
+				}
+
+				if cfg.CacheConfig.Enabled {
+					if err := cacheStore.Organizations.Set(organization); err != nil {
+						// TODO: log the cache error
+					}
 				}
 			}
 
