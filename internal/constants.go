@@ -4,6 +4,7 @@ import "time"
 
 type userKey string
 type orgKey string
+type roleKey string
 
 const (
 	DateTimeFormat = time.RFC3339
@@ -12,6 +13,7 @@ const (
 
 	UserCtx userKey = "user"
 	OrgCtx  orgKey  = "organization"
+	RoleCtx roleKey = "role"
 
 	// Event permissions
 	EventCreate  = "create_event"
