@@ -8,6 +8,7 @@ import (
 
 	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/config"
+	"github.com/KengoWada/meetup-clone/internal/logger"
 	"github.com/KengoWada/meetup-clone/internal/middleware"
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/services/response"
@@ -70,7 +71,7 @@ func getOrganization(appStore store.Store, cacheStore cache.Store) func(next htt
 			if cfg.CacheConfig.Enabled {
 				organization, err = cacheStore.Organizations.Get(orgID)
 				if err != nil {
-					// TODO: log the cache error
+					logger.ErrLoggerCache(r, err)
 				}
 			}
 
@@ -92,7 +93,7 @@ func getOrganization(appStore store.Store, cacheStore cache.Store) func(next htt
 
 				if cfg.CacheConfig.Enabled {
 					if err := cacheStore.Organizations.Set(organization); err != nil {
-						// TODO: log the cache error
+						logger.ErrLoggerCache(r, err)
 					}
 				}
 			}

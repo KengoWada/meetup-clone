@@ -89,7 +89,7 @@ func ErrLoggerCache(r *http.Request, err error) {
 	logger := Get()
 
 	reqIDRaw := middleware.GetReqID(r.Context())
-	logger.Panic().
+	logger.Error().
 		Str("requestID", reqIDRaw).
 		Str("method", r.Method).
 		Str("url", r.URL.Path).

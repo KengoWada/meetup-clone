@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/KengoWada/meetup-clone/internal"
+	"github.com/KengoWada/meetup-clone/internal/logger"
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
@@ -74,7 +75,7 @@ func (h *Handler) updateOrganization(w http.ResponseWriter, r *http.Request) {
 
 	if cfg.CacheConfig.Enabled {
 		if err := h.cacheStore.Organizations.Delete(organization.ID); err != nil {
-			// TODO: log cache error
+			logger.ErrLoggerCache(r, err)
 		}
 	}
 
@@ -121,7 +122,7 @@ func (h *Handler) deleteOrganization(w http.ResponseWriter, r *http.Request) {
 
 	if cfg.CacheConfig.Enabled {
 		if err := h.cacheStore.Organizations.Delete(organization.ID); err != nil {
-			// TODO: log cache error
+			logger.ErrLoggerCache(r, err)
 		}
 	}
 
@@ -161,7 +162,7 @@ func (h *Handler) deactivateOrganization(w http.ResponseWriter, r *http.Request)
 
 	if cfg.CacheConfig.Enabled {
 		if err := h.cacheStore.Organizations.Delete(organization.ID); err != nil {
-			// TODO: log cache error
+			logger.ErrLoggerCache(r, err)
 		}
 	}
 

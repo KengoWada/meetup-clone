@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/KengoWada/meetup-clone/internal"
+	"github.com/KengoWada/meetup-clone/internal/logger"
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/KengoWada/meetup-clone/internal/store"
@@ -80,14 +81,14 @@ func HasOrgPermission(permission string, appStore store.Store, cacheStore cache.
 		ctx := r.Context()
 		user, _ := ctx.Value(internal.UserCtx).(*models.User)
 
-		member, err := getOrganizationMember(ctx, appStore, cacheStore, user.UserProfile.ID, orgID)
+		member, err := getOrganizationMember(ctx, r, appStore, cacheStore, user.UserProfile.ID, orgID)
 		if err != nil {
 			errorMessage := response.ErrorResponse{Message: "Invalid organization ID"}
 			response.ErrorResponseBadRequest(w, r, err, errorMessage)
 			return
 		}
 
-		role, err := getRole(ctx, appStore, cacheStore, member.RoleID)
+		role, err := getRole(ctx, r, appStore, cacheStore, member.RoleID)
 		if err != nil {
 			errorMessage := response.ErrorResponse{Message: "Invalid organization ID"}
 			response.ErrorResponseBadRequest(w, r, err, errorMessage)
@@ -106,7 +107,7 @@ func HasOrgPermission(permission string, appStore store.Store, cacheStore cache.
 	return http.HandlerFunc(fn)
 }
 
-func getOrganizationMember(ctx context.Context, appStore store.Store, cacheStore cache.Store, userID, orgID int64) (*models.OrganizationMember, error) {
+func getOrganizationMember(ctx context.Context, r *http.Request, appStore store.Store, cacheStore cache.Store, userID, orgID int64) (*models.OrganizationMember, error) {
 	var fields = []string{"user_id", "org_id"}
 	var values = []any{userID, orgID}
 
@@ -126,14 +127,14 @@ func getOrganizationMember(ctx context.Context, appStore store.Store, cacheStore
 		}
 
 		if err := cacheStore.OrganizationMembers.Set(member); err != nil {
-			// TODO: log cache error
+			logger.ErrLoggerCache(r, err)
 		}
 	}
 
 	return member, nil
 }
 
-func getRole(ctx context.Context, appStore store.Store, cacheStore cache.Store, roleID int64) (*models.Role, error) {
+func getRole(ctx context.Context, r *http.Request, appStore store.Store, cacheStore cache.Store, roleID int64) (*models.Role, error) {
 	var fields = []string{"id"}
 	var values = []any{roleID}
 
@@ -153,7 +154,7 @@ func getRole(ctx context.Context, appStore store.Store, cacheStore cache.Store, 
 		}
 
 		if err := cacheStore.Roles.Set(role); err != nil {
-			// TODO: log cache error
+			logger.ErrLoggerCache(r, err)
 		}
 	}
 
