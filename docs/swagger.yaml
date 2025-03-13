@@ -191,6 +191,36 @@ definitions:
         example: Done.
         type: string
     type: object
+  roles.SimpleRole:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+    type: object
+  roles.createRolePayload:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+        uniqueItems: true
+    required:
+    - description
+    - name
+    - permissions
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -657,6 +687,51 @@ paths:
       summary: Update an organization
       tags:
       - organizations
+  /organizations/{orgID}/roles:
+    post:
+      consumes:
+      - application/json
+      description: Create an organization role
+      parameters:
+      - description: orgID to associate role to
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      - description: create organization role payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/roles.createRolePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: organization role successfully created
+          schema:
+            $ref: '#/definitions/roles.SimpleRole'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseForbidden'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Create an organization role
+      tags:
+      - roles
   /profiles/:
     delete:
       consumes:
