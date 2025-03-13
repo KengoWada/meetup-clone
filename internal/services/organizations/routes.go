@@ -40,6 +40,10 @@ func (h *Handler) RegisterRoutes() http.Handler {
 			"/",
 			middleware.HasOrgPermission(internal.OrgUpdate, h.store, h.cacheStore, h.updateOrganization),
 		)
+		r.Delete(
+			"/",
+			middleware.HasOrgPermission(internal.OrgDelete, h.store, h.cacheStore, h.deleteOrganization),
+		)
 	})
 
 	return mux

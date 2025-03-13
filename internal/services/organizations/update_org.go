@@ -24,7 +24,7 @@ type updateOrganizationPyload struct {
 //	@Tags			organizations
 //	@Accept			json
 //	@Produce		json
-//	@Param			orgID	path		int							true	"orgID to deactivate"
+//	@Param			orgID	path		int							true	"orgID to update"
 //	@Param			payload	body		updateOrganizationPyload	true	"update organization payload"
 //	@Success		200		{object}	orgResponse					"organization successfully updated"
 //	@Failure		400		{object}	response.DocsErrorResponse
@@ -86,4 +86,44 @@ func (h *Handler) updateOrganization(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:   organization.CreatedAt,
 	}
 	response.SuccessResponseOK(w, "", orgData)
+}
+
+// DeleteOrganization godoc
+//
+//	@Summary		Delete an organization
+//	@Description	Delete an organization
+//	@Tags			organizations
+//	@Accept			json
+//	@Produce		json
+//	@Param			orgID	path		int										true	"orgID to delete"
+//	@Success		200		{object}	response.DocsSuccessResponseDoneMessage	"organization successfully deleted"
+//	@Failure		400		{object}	response.DocsErrorResponse
+//	@Failure		401		{object}	response.DocsErrorResponseUnauthorized
+//	@Failure		403		{object}	response.DocsErrorResponseForbidden
+//	@Failure		500		{object}	response.DocsErrorResponseInternalServerErr
+//	@Security		ApiKeyAuth
+//	@Router			/organizations/{orgID} [delete]
+func (h *Handler) deleteOrganization(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	organization, _ := ctx.Value(internal.OrgCtx).(*models.Organization)
+
+	err := h.store.Organizations.SoftDelete(ctx, organization)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			res := response.ErrorResponse{Message: "Try again later"}
+			response.ErrorResponseBadRequest(w, r, err, res)
+		default:
+			response.ErrorResponseInternalServerErr(w, r, err)
+		}
+		return
+	}
+
+	if cfg.CacheConfig.Enabled {
+		if err := h.cacheStore.Organizations.Delete(organization.ID); err != nil {
+			// TODO: log cache error
+		}
+	}
+
+	response.SuccessResponseOK(w, "Done", nil)
 }
