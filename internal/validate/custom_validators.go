@@ -1,11 +1,13 @@
 package validate
 
 import (
+	"reflect"
 	"regexp"
 	"slices"
 	"time"
 	"unicode"
 
+	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -68,4 +70,18 @@ func passwordValidator(fl validator.FieldLevel) bool {
 func orgNameValidator(fl validator.FieldLevel) bool {
 	r, _ := regexp.Compile(`^[A-Za-z0-9 ]+$`)
 	return r.MatchString(fl.Field().String())
+}
+
+func isPermission(fl validator.FieldLevel) bool {
+	permissions := fl.Field().
+		Convert(reflect.TypeOf([]string{})).
+		Interface().([]string)
+
+	for _, permission := range permissions {
+		if !slices.Contains(internal.Permissions, permission) {
+			return false
+		}
+	}
+
+	return true
 }
