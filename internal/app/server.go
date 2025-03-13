@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal/services/auth"
 	"github.com/KengoWada/meetup-clone/internal/services/organizations"
 	"github.com/KengoWada/meetup-clone/internal/services/profiles"
+	"github.com/KengoWada/meetup-clone/internal/services/response"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
@@ -30,6 +32,16 @@ func (app *Application) Mount() http.Handler {
 	mux.Use(middleware.Recoverer)
 	mux.Use(middleware.Timeout(60 * time.Second))
 	mux.Use(appMiddleware.JWTMiddleware(app.Authenticator, app.Store, app.CacheStore))
+
+	mux.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		err := errors.New("invalid route path")
+		response.ErrorResponseRouteNotFound(w, r, err)
+	})
+
+	mux.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
+		err := errors.New("invalid route method")
+		response.ErrorResponseRouteMethodNotAllowed(w, r, err)
+	})
 
 	mux.Route("/v1", func(r chi.Router) {
 		if app.Config.Environment == config.AppEnvDev {

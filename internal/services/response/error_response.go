@@ -146,3 +146,29 @@ func ErrorResponseInvalidJSON(w http.ResponseWriter, r *http.Request, err error)
 	errorResponse := ErrorResponse{Message: errorMessage, Errors: errorsResponse}
 	ErrorResponseBadRequest(w, r, err, errorResponse)
 }
+
+func ErrorResponseRouteNotFound(w http.ResponseWriter, r *http.Request, err error) {
+	reqIDRaw := middleware.GetReqID(r.Context())
+	log.Warn().
+		Str("requestID", reqIDRaw).
+		Str("method", r.Method).
+		Str("url", r.URL.Path).
+		Err(errors.Wrap(err, "route not found")).
+		Msg("Route Not Found")
+
+	response := ErrorResponse{Message: "invalid route"}
+	utils.WriteJSON(w, http.StatusNotFound, response)
+}
+
+func ErrorResponseRouteMethodNotAllowed(w http.ResponseWriter, r *http.Request, err error) {
+	reqIDRaw := middleware.GetReqID(r.Context())
+	log.Warn().
+		Str("requestID", reqIDRaw).
+		Str("method", r.Method).
+		Str("url", r.URL.Path).
+		Err(errors.Wrap(err, "invalid route method")).
+		Msg("Invalid Route Method")
+
+	response := ErrorResponse{Message: "invalid method"}
+	utils.WriteJSON(w, http.StatusMethodNotAllowed, response)
+}
