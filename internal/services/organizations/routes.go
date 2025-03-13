@@ -36,6 +36,11 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux.Route("/{orgID}", func(r chi.Router) {
 		r.Use(getOrganization(h.store, h.cacheStore))
 
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.IsStaffOrAdmin)
+			r.Patch("/", h.deactivateOrganization)
+		})
+
 		r.Put(
 			"/",
 			middleware.HasOrgPermission(internal.OrgUpdate, h.store, h.cacheStore, h.updateOrganization),

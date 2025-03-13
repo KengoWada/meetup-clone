@@ -127,3 +127,43 @@ func (h *Handler) deleteOrganization(w http.ResponseWriter, r *http.Request) {
 
 	response.SuccessResponseOK(w, "Done", nil)
 }
+
+// DeactivateOrganization godoc
+//
+//	@Summary		Deactivate an organization(staff or admin)
+//	@Description	Deactivate an organization(staff or admin)
+//	@Tags			organizations
+//	@Accept			json
+//	@Produce		json
+//	@Param			orgID	path		int										true	"orgID to deactivate"
+//	@Success		200		{object}	response.DocsSuccessResponseDoneMessage	"organization successfully deactivated"
+//	@Failure		400		{object}	response.DocsErrorResponse
+//	@Failure		401		{object}	response.DocsErrorResponseUnauthorized
+//	@Failure		403		{object}	response.DocsErrorResponseForbidden
+//	@Failure		500		{object}	response.DocsErrorResponseInternalServerErr
+//	@Security		ApiKeyAuth
+//	@Router			/organizations/{orgID} [patch]
+func (h *Handler) deactivateOrganization(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	organization, _ := ctx.Value(internal.OrgCtx).(*models.Organization)
+
+	err := h.store.Organizations.Deactivate(ctx, organization)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			res := response.ErrorResponse{Message: "Try again later"}
+			response.ErrorResponseBadRequest(w, r, err, res)
+		default:
+			response.ErrorResponseInternalServerErr(w, r, err)
+		}
+		return
+	}
+
+	if cfg.CacheConfig.Enabled {
+		if err := h.cacheStore.Organizations.Delete(organization.ID); err != nil {
+			// TODO: log cache error
+		}
+	}
+
+	response.SuccessResponseOK(w, "Done", nil)
+}
