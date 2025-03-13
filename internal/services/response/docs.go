@@ -51,3 +51,7 @@ type DocsSuccessResponseRegisterUser struct {
 type DocsResponseMessageOnly struct {
 	Message string `json:"message"`
 }
+
+type DocsSuccessResponseDoneMessage struct {
+	Message string `json:"message" example:"Done"`
+}
