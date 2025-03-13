@@ -43,7 +43,7 @@ func IsStaffOrAdmin(next http.Handler) http.Handler {
 
 		if user.Role == models.UserClientRole {
 			err := errors.New("client role user tried to access staff or admin route")
-			response.ErrorResponseUnauthorized(w, r, err)
+			response.ErrorResponseForbidden(w, r, err)
 			return
 		}
 
@@ -59,7 +59,7 @@ func IsAdmin(next http.Handler) http.Handler {
 
 		if user.Role != models.UserAdminRole {
 			err := fmt.Errorf("%s role tried to access admin route", user.Role)
-			response.ErrorResponseUnauthorized(w, r, err)
+			response.ErrorResponseForbidden(w, r, err)
 			return
 		}
 

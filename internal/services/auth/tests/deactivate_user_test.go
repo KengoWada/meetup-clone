@@ -83,8 +83,8 @@ func TestDeactivateUser(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusUnauthorized, response.StatusCode())
-		assert.Equal(t, "unauthorized", response.GetMessage())
+		assert.Equal(t, http.StatusForbidden, response.StatusCode())
+		assert.Equal(t, "forbidden", response.GetMessage())
 	})
 
 	t.Run("should not deactivate user invalid user ID", func(t *testing.T) {
