@@ -549,6 +549,65 @@
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deactivate an organization(staff or admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Deactivate an organization(staff or admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "orgID to deactivate",
+                        "name": "orgID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "organization successfully deactivated",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsSuccessResponseDoneMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseForbidden"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
             }
         },
         "/profiles/": {
