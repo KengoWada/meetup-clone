@@ -221,6 +221,17 @@ definitions:
     - name
     - permissions
     type: object
+  roles.updateRolePayload:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -806,6 +817,55 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get an organization role
+      tags:
+      - roles
+    put:
+      consumes:
+      - application/json
+      description: Update an organization role
+      parameters:
+      - description: orgID to associate role to
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      - description: roleID to update
+        in: path
+        name: roleID
+        required: true
+        type: integer
+      - description: update organization role payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/roles.updateRolePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: role successfully updated
+          schema:
+            $ref: '#/definitions/models.SimpleRole'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseForbidden'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an organization role
       tags:
       - roles
   /organizations/{orgID}/roles/permissions:
