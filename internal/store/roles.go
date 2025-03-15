@@ -77,6 +77,40 @@ func (s *RoleStore) Get(ctx context.Context, isDeleted bool, fields []string, va
 	return &role, nil
 }
 
+func (s *RoleStore) GetByOrgID(ctx context.Context, orgID int64) ([]*models.SimpleRole, error) {
+	query := `
+		SELECT id, name, description, permissions FROM roles
+		WHERE org_id = $1 AND deleted_at IS NULL
+		ORDER BY name ASC, created_at ASC
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var roles []*models.SimpleRole
+	for rows.Next() {
+		var role models.SimpleRole
+		err := rows.Scan(
+			&role.ID,
+			&role.Name,
+			&role.Description,
+			pq.Array(&role.Permissions),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		roles = append(roles, &role)
+	}
+
+	return roles, nil
+}
+
 func (s *RoleStore) Update(ctx context.Context, role *models.Role) error {
 	query := `
 		UPDATE roles
