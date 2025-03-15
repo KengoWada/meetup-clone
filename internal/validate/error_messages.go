@@ -2,6 +2,7 @@ package validate
 
 import (
 	"errors"
+	"strings"
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
@@ -80,6 +81,11 @@ func generateErrorMessages(err error, errorMessages FieldErrorMessages) (map[str
 		for _, err := range validateErrs {
 			field := firstLetterToLower(err.Field())
 			tag := err.ActualTag()
+
+			index := strings.Index(field, "[")
+			if index != -1 {
+				field = field[:index]
+			}
 
 			if tag == "required" {
 				response[field] = "Field is required"
