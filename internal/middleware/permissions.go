@@ -70,7 +70,7 @@ func IsAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func HasOrgPermission(permission string, appStore store.Store, cacheStore cache.Store, next http.HandlerFunc) http.HandlerFunc {
+func HasOrgPermission(permissions []string, appStore store.Store, cacheStore cache.Store, next http.HandlerFunc) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		orgID, err := strconv.ParseInt(chi.URLParam(r, "orgID"), 10, 64)
 		if err != nil {
@@ -83,19 +83,37 @@ func HasOrgPermission(permission string, appStore store.Store, cacheStore cache.
 
 		member, err := getOrganizationMember(ctx, r, appStore, cacheStore, user.UserProfile.ID, orgID)
 		if err != nil {
-			errorMessage := response.ErrorResponse{Message: "Invalid organization ID"}
-			response.ErrorResponseBadRequest(w, r, err, errorMessage)
+			switch err {
+			case store.ErrNotFound:
+				err := errors.New("user is not an active member of the organization")
+				response.ErrorResponseForbidden(w, r, err)
+			default:
+				response.ErrorResponseInternalServerErr(w, r, err)
+			}
 			return
 		}
 
 		role, err := getRole(ctx, r, appStore, cacheStore, member.RoleID)
 		if err != nil {
-			errorMessage := response.ErrorResponse{Message: "Invalid organization ID"}
-			response.ErrorResponseBadRequest(w, r, err, errorMessage)
+			switch err {
+			case store.ErrNotFound:
+				err := errors.New("user has a deleted role")
+				response.ErrorResponseForbidden(w, r, err)
+			default:
+				response.ErrorResponseInternalServerErr(w, r, err)
+			}
 			return
 		}
 
-		if !slices.Contains(role.Permissions, permission) {
+		var hasPermission bool
+		for _, permission := range permissions {
+			if slices.Contains(role.Permissions, permission) {
+				hasPermission = true
+				break
+			}
+		}
+
+		if !hasPermission && len(permissions) > 0 {
 			err := errors.New("user does not have permissions to perform action")
 			response.ErrorResponseForbidden(w, r, err)
 			return
@@ -117,7 +135,7 @@ func getOrganizationMember(ctx context.Context, r *http.Request, appStore store.
 
 	member, err := cacheStore.OrganizationMembers.Get(userID, orgID)
 	if err != nil {
-		return nil, err
+		logger.ErrLoggerCache(r, err)
 	}
 
 	if member == nil {
@@ -129,6 +147,12 @@ func getOrganizationMember(ctx context.Context, r *http.Request, appStore store.
 		if err := cacheStore.OrganizationMembers.Set(member); err != nil {
 			logger.ErrLoggerCache(r, err)
 		}
+	}
+
+	// This is to ensure that cached members that were deleted
+	// don't have access
+	if member.DeletedAt != nil {
+		return nil, store.ErrNotFound
 	}
 
 	return member, nil
@@ -144,7 +168,7 @@ func getRole(ctx context.Context, r *http.Request, appStore store.Store, cacheSt
 
 	role, err := cacheStore.Roles.Get(roleID)
 	if err != nil {
-		return nil, err
+		logger.ErrLoggerCache(r, err)
 	}
 
 	if role == nil {
@@ -156,6 +180,12 @@ func getRole(ctx context.Context, r *http.Request, appStore store.Store, cacheSt
 		if err := cacheStore.Roles.Set(role); err != nil {
 			logger.ErrLoggerCache(r, err)
 		}
+	}
+
+	// This is to ensure that cached roles that were deleted
+	// don't have access
+	if role.DeletedAt != nil {
+		return nil, store.ErrNotFound
 	}
 
 	return role, nil
