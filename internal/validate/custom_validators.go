@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"reflect"
 	"regexp"
 	"slices"
 	"time"
@@ -72,16 +71,6 @@ func orgNameValidator(fl validator.FieldLevel) bool {
 	return r.MatchString(fl.Field().String())
 }
 
-func isPermission(fl validator.FieldLevel) bool {
-	permissions := fl.Field().
-		Convert(reflect.TypeOf([]string{})).
-		Interface().([]string)
-
-	for _, permission := range permissions {
-		if !slices.Contains(internal.Permissions, permission) {
-			return false
-		}
-	}
-
-	return true
+func permissionValidator(fl validator.FieldLevel) bool {
+	return slices.Contains(internal.Permissions, fl.Field().String())
 }

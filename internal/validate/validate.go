@@ -19,7 +19,7 @@ func Get() *validator.Validate {
 		Validate.RegisterValidation("is_date", dateValidator)
 		Validate.RegisterValidation("is_password", passwordValidator)
 		Validate.RegisterValidation("is_org_name", orgNameValidator)
-		Validate.RegisterValidation("is_permission", isPermission)
+		Validate.RegisterValidation("is_permission", permissionValidator)
 	})
 
 	return Validate
