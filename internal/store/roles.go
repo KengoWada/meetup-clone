@@ -146,6 +146,35 @@ func (s *RoleStore) Update(ctx context.Context, role *models.Role) error {
 	return nil
 }
 
+func (s *RoleStore) SoftDelete(ctx context.Context, role *models.Role) error {
+	query := `
+		UPDATE roles
+		SET deleted_at = NOW(), version = version + 1
+		WHERE id = $1 AND version = $2
+		RETURNING version, updated_at, deleted_at
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(ctx, query, role.ID, role.Version).Scan(
+		&role.Version,
+		&role.UpdatedAt,
+		&role.DeletedAt,
+	)
+
+	if err != nil {
+		fmt.Println(err)
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
 func createRoleTx(ctx context.Context, tx *sql.Tx, role *models.Role) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()

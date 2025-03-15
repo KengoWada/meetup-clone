@@ -47,6 +47,7 @@ type Store struct {
 		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Role, error)
 		GetByOrgID(ctx context.Context, orgID int64) ([]*models.SimpleRole, error)
 		Update(ctx context.Context, role *models.Role) error
+		SoftDelete(ctx context.Context, role *models.Role) error
 	}
 	OrganizationMembers interface {
 		Create(ctx context.Context, member *models.OrganizationMember) error
