@@ -27,7 +27,7 @@ type createRolePayload struct {
 //	@Produce		json
 //	@Param			orgID	path		int					true	"orgID to associate role to"
 //	@Param			payload	body		createRolePayload	true	"create organization role payload"
-//	@Success		201		{object}	SimpleRole			"organization role successfully created"
+//	@Success		201		{object}	models.SimpleRole	"organization role successfully created"
 //	@Failure		400		{object}	response.DocsErrorResponse
 //	@Failure		401		{object}	response.DocsErrorResponseUnauthorized
 //	@Failure		403		{object}	response.DocsErrorResponseForbidden
