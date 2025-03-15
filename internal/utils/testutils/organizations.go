@@ -33,7 +33,7 @@ func CreateTestOrganization(ctx context.Context, appStore store.Store, isActive 
 	return organization, nil
 }
 
-func CreateTestRole(ctx context.Context, appStore store.Store, orgID int64, permissions []string) (*models.Role, error) {
+func CreateTestRole(ctx context.Context, appStore store.Store, isDeleted bool, orgID int64, permissions []string) (*models.Role, error) {
 	name := faker.Username(options.WithGenerateUniqueValues(true))
 	role := &models.Role{
 		Name:           name,
@@ -44,6 +44,12 @@ func CreateTestRole(ctx context.Context, appStore store.Store, orgID int64, perm
 
 	if err := appStore.Roles.Create(ctx, role); err != nil {
 		return nil, err
+	}
+
+	if isDeleted {
+		if err := appStore.Roles.SoftDelete(ctx, role); err != nil {
+			return nil, err
+		}
 	}
 
 	return role, nil
