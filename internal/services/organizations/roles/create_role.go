@@ -7,7 +7,6 @@ import (
 	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/models"
 	"github.com/KengoWada/meetup-clone/internal/services/response"
-	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/utils"
 	"github.com/KengoWada/meetup-clone/internal/validate"
 )
@@ -58,19 +57,16 @@ func (h *Handler) createRole(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	organization := ctx.Value(internal.OrgCtx).(*models.Organization)
 
-	fields := []string{"name", "org_id"}
-	values := []any{string(payload.Name), organization.ID}
-	_, err = h.store.Roles.Get(ctx, false, fields, values)
-	if err != nil && err != store.ErrNotFound {
+	nameExists, err := roleNameExists(ctx, h.store, string(payload.Name), organization.ID, 0)
+	if err != nil {
 		response.ErrorResponseInternalServerErr(w, r, err)
 		return
 	}
 
-	if err == nil {
-		err := errors.New("duplicate role name for organization")
-		errorMessage := response.NewValidationErrorResponse(
-			response.ErrorsResponse{"name": "name already exists"})
-		response.ErrorResponseBadRequest(w, r, err, errorMessage)
+	if nameExists {
+		err := errors.New("duplicate organization role name")
+		errorResponse := response.NewValidationErrorResponse(response.ErrorsResponse{"name": "name already exists"})
+		response.ErrorResponseBadRequest(w, r, err, errorResponse)
 		return
 	}
 
