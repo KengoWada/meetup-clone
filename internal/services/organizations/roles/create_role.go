@@ -15,7 +15,7 @@ import (
 type createRolePayload struct {
 	Name        utils.TrimString `json:"name" validate:"required,max=100"`
 	Description utils.TrimString `json:"description" validate:"required"`
-	Permissions []string         `json:"permissions" validate:"required,is_permission,unique"`
+	Permissions []string         `json:"permissions" validate:"required,gt=0,unique,dive,is_permission"`
 }
 
 // CreateOrganizationRole godoc
