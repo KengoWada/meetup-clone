@@ -65,6 +65,15 @@ func (h *Handler) RegisterRoutes() http.Handler {
 				h.getRole,
 			),
 		)
+		roleMux.Put(
+			"/",
+			middleware.HasOrgPermission(
+				[]string{internal.RoleUpdate},
+				h.store,
+				h.cacheStore,
+				h.updateRole,
+			),
+		)
 	})
 
 	return mux
