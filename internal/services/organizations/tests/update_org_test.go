@@ -224,8 +224,8 @@ func TestUpdateOrganizationDetails(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-		assert.Equal(t, "Invalid organization ID", response.GetMessage())
+		assert.Equal(t, http.StatusForbidden, response.StatusCode())
+		assert.Equal(t, "forbidden", response.GetMessage())
 	})
 
 	t.Run("should not update org if org is deactivated", func(t *testing.T) {
@@ -245,7 +245,7 @@ func TestUpdateOrganizationDetails(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusUnauthorized, response.StatusCode())
-		assert.Equal(t, "unauthorized", response.GetMessage())
+		assert.Equal(t, http.StatusForbidden, response.StatusCode())
+		assert.Equal(t, "forbidden", response.GetMessage())
 	})
 }

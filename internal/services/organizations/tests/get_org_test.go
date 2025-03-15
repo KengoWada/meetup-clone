@@ -117,7 +117,7 @@ func TestGetOrg(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-		assert.Equal(t, "Invalid organization ID", response.GetMessage())
+		assert.Equal(t, http.StatusForbidden, response.StatusCode())
+		assert.Equal(t, "forbidden", response.GetMessage())
 	})
 }
