@@ -11,6 +11,7 @@ var (
 		"permissions": validate.TagErrorMessages{
 			"is_permission": "Invalid permission sent",
 			"unique":        "Duplicate permissions are not allowed",
+			"gt":            "Permissions has to have at least one element",
 		},
 	}
 )
