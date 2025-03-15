@@ -717,6 +717,62 @@
             }
         },
         "/organizations/{orgID}/roles": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get an organization roles",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get an organization roles",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "id of the org whose roles to fetch",
+                        "name": "orgID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "org roles successfully fetched",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.SimpleRole"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -756,7 +812,7 @@
                     "201": {
                         "description": "organization role successfully created",
                         "schema": {
-                            "$ref": "#/definitions/roles.SimpleRole"
+                            "$ref": "#/definitions/models.SimpleRole"
                         }
                     },
                     "400": {
@@ -775,6 +831,129 @@
                         "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/response.DocsErrorResponseForbidden"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/organizations/{orgID}/roles/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get an organization permissions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get an organization permissions",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "id of the org whose permissions to fetch",
+                        "name": "orgID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "org roles successfully fetched",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseForbidden"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/organizations/{orgID}/roles/{roleID}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get an organization role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get an organization role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "orgID to associate role to",
+                        "name": "orgID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "roleID to fetch",
+                        "name": "roleID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "role successfully fetched",
+                        "schema": {
+                            "$ref": "#/definitions/models.SimpleRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
                         }
                     },
                     "500": {
@@ -1028,6 +1207,26 @@
                 }
             }
         },
+        "models.SimpleRole": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "organizations.createOrganizationPayload": {
             "type": "object",
             "required": [
@@ -1195,26 +1394,6 @@
                 "message": {
                     "type": "string",
                     "example": "Done."
-                }
-            }
-        },
-        "roles.SimpleRole": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },

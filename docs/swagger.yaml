@@ -77,6 +77,19 @@ definitions:
       profilePic:
         type: string
     type: object
+  models.SimpleRole:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+    type: object
   organizations.createOrganizationPayload:
     properties:
       description:
@@ -190,19 +203,6 @@ definitions:
       message:
         example: Done.
         type: string
-    type: object
-  roles.SimpleRole:
-    properties:
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      permissions:
-        items:
-          type: string
-        type: array
     type: object
   roles.createRolePayload:
     properties:
@@ -688,6 +688,42 @@ paths:
       tags:
       - organizations
   /organizations/{orgID}/roles:
+    get:
+      consumes:
+      - application/json
+      description: Get an organization roles
+      parameters:
+      - description: id of the org whose roles to fetch
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: org roles successfully fetched
+          schema:
+            items:
+              $ref: '#/definitions/models.SimpleRole'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Get an organization roles
+      tags:
+      - roles
     post:
       consumes:
       - application/json
@@ -710,7 +746,7 @@ paths:
         "201":
           description: organization role successfully created
           schema:
-            $ref: '#/definitions/roles.SimpleRole'
+            $ref: '#/definitions/models.SimpleRole'
         "400":
           description: Bad Request
           schema:
@@ -730,6 +766,85 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create an organization role
+      tags:
+      - roles
+  /organizations/{orgID}/roles/{roleID}:
+    get:
+      consumes:
+      - application/json
+      description: Get an organization role
+      parameters:
+      - description: orgID to associate role to
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      - description: roleID to fetch
+        in: path
+        name: roleID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: role successfully fetched
+          schema:
+            $ref: '#/definitions/models.SimpleRole'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Get an organization role
+      tags:
+      - roles
+  /organizations/{orgID}/roles/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Get an organization permissions
+      parameters:
+      - description: id of the org whose permissions to fetch
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: org roles successfully fetched
+          schema:
+            additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseForbidden'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Get an organization permissions
       tags:
       - roles
   /profiles/:
