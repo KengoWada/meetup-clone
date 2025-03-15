@@ -74,6 +74,15 @@ func (h *Handler) RegisterRoutes() http.Handler {
 				h.updateRole,
 			),
 		)
+		roleMux.Delete(
+			"/",
+			middleware.HasOrgPermission(
+				[]string{internal.RoleDelete},
+				h.store,
+				h.cacheStore,
+				h.deleteRole,
+			),
+		)
 	})
 
 	return mux

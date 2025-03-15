@@ -104,6 +104,45 @@ func (h *Handler) updateRole(w http.ResponseWriter, r *http.Request) {
 	response.SuccessResponseOK(w, "", simpleRole)
 }
 
+func (h *Handler) deleteRole(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	role, _ := ctx.Value(internal.RoleCtx).(*models.Role)
+
+	fields := []string{"role_id", "org_id"}
+	values := []any{role.ID, role.OrganizationID}
+	_, err := h.store.OrganizationMembers.Get(ctx, false, fields, values)
+	if err != nil && err != store.ErrNotFound {
+		response.ErrorResponseInternalServerErr(w, r, err)
+		return
+	}
+
+	if err != store.ErrNotFound {
+		err := errors.New("role has active users attached to it")
+		errorResponse := response.ErrorResponse{Message: "Role is assigned to active users. Please reassign them before deleting."}
+		response.ErrorResponseBadRequest(w, r, err, errorResponse)
+		return
+	}
+
+	if err := h.store.Roles.SoftDelete(ctx, role); err != nil {
+		switch err {
+		case store.ErrNotFound:
+			res := response.ErrorResponse{Message: "Try again later"}
+			response.ErrorResponseBadRequest(w, r, err, res)
+		default:
+			response.ErrorResponseInternalServerErr(w, r, err)
+		}
+		return
+	}
+
+	if cfg.CacheConfig.Enabled {
+		if err := h.cacheStore.Roles.Delete(role.ID); err != nil {
+			logger.ErrLoggerCache(r, err)
+		}
+	}
+
+	response.SuccessResponseOK(w, "Done", nil)
+}
+
 func roleNameExists(ctx context.Context, appStore store.Store, name string, orgID, roleID int64) (bool, error) {
 	fields := []string{"name", "org_id"}
 	values := []any{name, orgID}
