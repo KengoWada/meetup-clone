@@ -6,6 +6,7 @@ import (
 	"github.com/KengoWada/meetup-clone/internal"
 	"github.com/KengoWada/meetup-clone/internal/config"
 	"github.com/KengoWada/meetup-clone/internal/middleware"
+	"github.com/KengoWada/meetup-clone/internal/services/organizations/members"
 	"github.com/KengoWada/meetup-clone/internal/services/organizations/roles"
 	"github.com/KengoWada/meetup-clone/internal/store"
 	"github.com/KengoWada/meetup-clone/internal/store/cache"
@@ -60,6 +61,10 @@ func (h *Handler) RegisterRoutes() http.Handler {
 		rolesHandler := roles.NewHandler(h.store, h.cacheStore)
 		rolesMux := rolesHandler.RegisterRoutes()
 		orgMux.Mount("/roles", rolesMux)
+
+		membersHandler := members.NewHandler(h.store, h.cacheStore)
+		membersMux := membersHandler.RegisterRoutes()
+		orgMux.Mount("/members", membersMux)
 	})
 
 	return mux
