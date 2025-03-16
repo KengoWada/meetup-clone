@@ -46,9 +46,8 @@ func TestDeleteUser(t *testing.T) {
 
 	t.Run("should delete user", func(t *testing.T) {
 		testUser := createTestUser(true)
-		token := generateToken(testUser.ID, true)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
 
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, true)}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, nil)
 		if err != nil {
 			t.Fatal(err)
@@ -63,9 +62,8 @@ func TestDeleteUser(t *testing.T) {
 
 	t.Run("should not delete user invalid token", func(t *testing.T) {
 		testUser := createTestUser(true)
-		token := generateToken(testUser.ID, false)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
 
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, false)}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, nil)
 		if err != nil {
 			t.Fatal(err)
