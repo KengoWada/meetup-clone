@@ -481,6 +481,8 @@ func (s *UserStore) Get(ctx context.Context, isDeleted bool, fields []string, va
 	}
 
 	query := fmt.Sprintf("SELECT * FROM users WHERE %s", strings.Join(queryConditions, " AND "))
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
 
 	var user = models.User{}
 	err := s.db.QueryRowContext(ctx, query, values...).Scan(
@@ -556,6 +558,8 @@ func (s *UserStore) GetWithProfile(ctx context.Context, isDeleted bool, fields [
 		`,
 		strings.Join(queryConditions, " AND "),
 	)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
 
 	user := models.User{UserProfile: &models.UserProfile{}}
 	err := s.db.

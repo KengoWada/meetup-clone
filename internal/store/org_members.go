@@ -48,6 +48,8 @@ func (s *OrganizationMembersStore) Get(ctx context.Context, isDeleted bool, fiel
 		"SELECT * FROM organization_members WHERE %s",
 		strings.Join(queryConditions, " AND "),
 	)
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
 
 	var member = models.OrganizationMember{}
 	err := s.db.QueryRowContext(ctx, query, values...).Scan(

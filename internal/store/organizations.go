@@ -40,6 +40,8 @@ func (s *OrganizationStore) Create(ctx context.Context, organization *models.Org
 
 func (s *OrganizationStore) Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.Organization, error) {
 	query := fmt.Sprintf("SELECT * FROM organizations WHERE %s", generateQueryConditions(isDeleted, fields))
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
 
 	var organization = models.Organization{}
 	err := s.db.QueryRowContext(ctx, query, values...).Scan(
