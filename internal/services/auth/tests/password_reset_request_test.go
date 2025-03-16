@@ -44,97 +44,82 @@ func TestPasswordResetRequest(t *testing.T) {
 
 	t.Run("should send password reset email", func(t *testing.T) {
 		testUserData := createTestUser(true)
-		data := testutils.TestRequestData{"email": testUserData.Email}
 
+		data := testutils.TestRequestData{"email": testUserData.Email}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusOK, response.StatusCode())
 
-		responseMessage := "Email has been sent."
-		assert.Equal(t, responseMessage, response.GetMessage())
+		assert.Equal(t, http.StatusOK, response.StatusCode())
+		assert.Equal(t, "Email has been sent.", response.GetMessage())
 	})
 
 	t.Run("should not send password reset email unknown field", func(t *testing.T) {
 		testUserData := createTestUser(true)
 		const unknownField = "fakeField"
-		data := testutils.TestRequestData{"email": testUserData.Email, unknownField: "some data"}
 
+		data := testutils.TestRequestData{"email": testUserData.Email, unknownField: "some data"}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Unknown field in request", response.GetMessage())
 
 		errorMessages, ok := response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		const responseMessage = "Unknown field in request"
-		const unknownFieldMessage = "unknown field"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, unknownFieldMessage, errorMessages[unknownField])
+		assert.Equal(t, "unknown field", errorMessages[unknownField])
 	})
 
 	t.Run("should not send password reset email invalid request", func(t *testing.T) {
 		data := testutils.TestRequestData{"email": ""}
-
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid request body", response.GetMessage())
 
 		errorMessages, ok := response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		const responseMessage = "Invalid request body"
-		var errorMessage = "Field is required"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["email"])
+		assert.Equal(t, "Field is required", errorMessages["email"])
 	})
 
 	t.Run("should not send password reset email email not in db", func(t *testing.T) {
 		email, _ := testutils.GenerateEmailAndUsername()
-		data := testutils.TestRequestData{"email": email}
 
+		data := testutils.TestRequestData{"email": email}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusOK, response.StatusCode())
 
-		const responseMessage = "Email has been sent."
-		assert.Equal(t, responseMessage, response.GetMessage())
+		assert.Equal(t, http.StatusOK, response.StatusCode())
+		assert.Equal(t, "Email has been sent.", response.GetMessage())
 	})
 
 	t.Run("should not send password reset email if user deactivated or not activated", func(t *testing.T) {
-		testUserData := createTestUser(false)
-		data := testutils.TestRequestData{"email": testUserData.Email}
-
-		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
-		if err != nil {
-			t.Fatal(err)
+		var testUsers = []testutils.TestUserData{
+			createTestUser(false),   // Inactive user
+			createDeactivatedUser(), // Deactivated user
 		}
-		assert.Equal(t, http.StatusOK, response.StatusCode())
 
-		responseMessage := "Email has been sent."
-		assert.Equal(t, responseMessage, response.GetMessage())
+		for _, testUser := range testUsers {
+			data := testutils.TestRequestData{"email": testUser.Email}
+			response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		testUserData = createDeactivatedUser()
-		data["email"] = testUserData.Email
-
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
-		if err != nil {
-			t.Fatal(err)
+			assert.Equal(t, http.StatusOK, response.StatusCode())
+			assert.Equal(t, "Email has been sent.", response.GetMessage())
 		}
-		assert.Equal(t, http.StatusOK, response.StatusCode())
-		assert.Equal(t, responseMessage, response.GetMessage())
 	})
 }

@@ -44,8 +44,8 @@ func TestLoginUser(t *testing.T) {
 
 	t.Run("should log in a user", func(t *testing.T) {
 		testUserData := createTestUser(true)
-		data := testutils.TestRequestData{"email": testUserData.Email, "password": testUserData.Password}
 
+		data := testutils.TestRequestData{"email": testUserData.Email, "password": testUserData.Password}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
@@ -54,7 +54,7 @@ func TestLoginUser(t *testing.T) {
 
 		data, ok := response.GetData()
 		if !ok {
-			t.Fatal("failed to convert response errors to map")
+			t.Fatal("failed to convert response data to map")
 		}
 
 		token, ok := data["token"]
@@ -70,73 +70,66 @@ func TestLoginUser(t *testing.T) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid request body", response.GetMessage())
 
 		errorMessages, ok := response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		var responseMessage = "Invalid request body"
-		var requiredFieldMessage = "Field is required"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, requiredFieldMessage, errorMessages["email"])
-		assert.Equal(t, requiredFieldMessage, errorMessages["password"])
+		assert.Equal(t, "Field is required", errorMessages["email"])
+		assert.Equal(t, "Field is required", errorMessages["password"])
 	})
 
 	t.Run("should not log in if account doesn't exist", func(t *testing.T) {
 		email, _ := testutils.GenerateEmailAndUsername()
-		data := testutils.TestRequestData{"email": email, "password": testutils.TestPassword}
 
+		data := testutils.TestRequestData{"email": email, "password": testutils.TestPassword}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 
-		var responseMessage = "Invalid credentials"
-		assert.Equal(t, responseMessage, response.GetMessage())
+		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid credentials", response.GetMessage())
 	})
 
 	t.Run("should not log in if account is not active", func(t *testing.T) {
 		testUserData := createTestUser(false)
-		data := testutils.TestRequestData{"email": testUserData.Email, "password": testUserData.Password}
 
+		data := testutils.TestRequestData{"email": testUserData.Email, "password": testUserData.Password}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusUnprocessableEntity, response.StatusCode())
 
-		var responseMessage = "Please verify your email address to proceed."
-		assert.Equal(t, responseMessage, response.GetMessage())
+		assert.Equal(t, http.StatusUnprocessableEntity, response.StatusCode())
+		assert.Equal(t, "Please verify your email address to proceed.", response.GetMessage())
 	})
 
 	t.Run("should not log in with invalid password", func(t *testing.T) {
 		testUserData := createTestUser(true)
-		data := testutils.TestRequestData{"email": testUserData.Email, "password": "wrong_password"}
 
+		data := testutils.TestRequestData{"email": testUserData.Email, "password": "wrong_password"}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 
-		var responseMessage = "Invalid credentials"
-		assert.Equal(t, responseMessage, response.GetMessage())
+		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid credentials", response.GetMessage())
 	})
 
 	t.Run("should not log in a deactivated user", func(t *testing.T) {
 		testUserData := createDeactivatedUser()
-		data := testutils.TestRequestData{"email": testUserData.Email, "password": testUserData.Password}
 
+		data := testutils.TestRequestData{"email": testUserData.Email, "password": testUserData.Password}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 
-		var responseMessage = "Invalid credentials"
-		assert.Equal(t, responseMessage, response.GetMessage())
+		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid credentials", response.GetMessage())
 	})
 }
