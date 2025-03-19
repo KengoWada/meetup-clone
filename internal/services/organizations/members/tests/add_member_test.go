@@ -265,4 +265,23 @@ func TestAddMember(t *testing.T) {
 
 		assert.Equal(t, "unknown field", errorMessages[unknownField])
 	})
+
+	t.Run("should not invite existing organization member", func(t *testing.T) {
+		testUser := createTestUser(true)
+		org := createTestOrg(true, generateRole("valid"), testUser.UserProfile.ID)
+		testRole := createTestRole(false, org.ID)
+
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, true)}
+		payload := testutils.TestRequestData{
+			"roleId": testRole.ID,
+			"email":  testUser.Email,
+		}
+
+		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint(org.ID), headers, payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "User is already a member", response.GetMessage())
+	})
 }

@@ -74,6 +74,19 @@ func (h *Handler) inviteMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = h.store.OrganizationMembers.Get(ctx, false, fields, values)
+	if err != nil && err != store.ErrNotFound {
+		response.ErrorResponseInternalServerErr(w, r, err)
+		return
+	}
+
+	if err == nil {
+		err := errors.New("tried to invite team member")
+		errorResponse := response.ErrorResponse{Message: "User is already a member"}
+		response.ErrorResponseBadRequest(w, r, err, errorResponse)
+		return
+	}
+
 	invite := &models.OrganizationInvite{
 		OrganizationID: organization.ID,
 		UserProfileID:  user.UserProfile.ID,
