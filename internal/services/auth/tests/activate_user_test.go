@@ -45,33 +45,41 @@ func TestActivateUser(t *testing.T) {
 		return testUserData
 	}
 
-	t.Run("should activate user", func(t *testing.T) {
-		testUserData := createTestUser(false)
-		token, err := utils.GenerateToken(testUserData.Email, []byte(appItems.App.Config.SecretKey))
+	generateToken := func(email string, isValid bool) string {
+		var createdAt string = time.Now().UTC().Format(internal.DateTimeFormat)
+		if !isValid {
+			createdAt = time.Now().Add(-time.Hour).UTC().Format(internal.DateTimeFormat)
+		}
+
+		token, err := utils.GenerateTestToken(email, []byte(appItems.App.Config.SecretKey), createdAt)
 		if err != nil {
 			t.Fatal("failed to generate test token to activate a user")
 		}
 
-		data := testutils.TestRequestData{"token": token}
+		return token
+	}
+
+	t.Run("should activate user", func(t *testing.T) {
+		testUserData := createTestUser(false)
+
+		data := testutils.TestRequestData{"token": generateToken(testUserData.Email, true)}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusOK, response.StatusCode())
 
-		const responseMessage = "Email successfully verified"
-		assert.Equal(t, responseMessage, response.GetMessage())
+		assert.Equal(t, http.StatusOK, response.StatusCode())
+		assert.Equal(t, "Email successfully verified", response.GetMessage())
 	})
 
 	t.Run("should not activate if the request has an unknown field", func(t *testing.T) {
 		testUserData := createTestUser(false)
-		token, err := utils.GenerateToken(testUserData.Email, []byte(appItems.App.Config.SecretKey))
-		if err != nil {
-			t.Fatal("failed to generate test token to activate a user")
-		}
 
 		const unknownField = "fakeField"
-		data := testutils.TestRequestData{"token": token, unknownField: "random data :)"}
+		data := testutils.TestRequestData{
+			"token":      generateToken(testUserData.Email, true),
+			unknownField: "random data :)",
+		}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
@@ -83,87 +91,59 @@ func TestActivateUser(t *testing.T) {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		const responseMesaage = "Unknown field in request"
-		const unknownFieldMessage = "unknown field"
-
-		assert.Equal(t, responseMesaage, response.GetMessage())
-		assert.Equal(t, unknownFieldMessage, errorMessages[unknownField])
+		assert.Equal(t, "Unknown field in request", response.GetMessage())
+		assert.Equal(t, "unknown field", errorMessages[unknownField])
 	})
 
 	t.Run("should not activate if token is expired", func(t *testing.T) {
 		testUserData := createTestUser(false)
-		token, err := utils.GenerateTestToken(
-			testUserData.Email,
-			[]byte(appItems.App.Config.SecretKey),
-			// get current time and subtract an hour
-			time.Now().Add(-time.Hour).UTC().Format(internal.DateTimeFormat),
-		)
-		if err != nil {
-			t.Fatal("failed to generate test token to activate a user")
-		}
 
-		data := testutils.TestRequestData{"token": token}
+		data := testutils.TestRequestData{"token": generateToken(testUserData.Email, false)}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusUnprocessableEntity, response.StatusCode())
 
-		const responseMesaage = "Activation token has exipred"
-		assert.Equal(t, responseMesaage, response.GetMessage())
+		assert.Equal(t, http.StatusUnprocessableEntity, response.StatusCode())
+		assert.Equal(t, "Activation token has exipred", response.GetMessage())
 	})
 
 	t.Run("should not activate if email is invalid", func(t *testing.T) {
 		email, _ := testutils.GenerateEmailAndUsername()
-		token, err := utils.GenerateToken(email, []byte(appItems.App.Config.SecretKey))
-		if err != nil {
-			t.Fatal("failed to generate test token to activate a user")
-		}
 
-		data := testutils.TestRequestData{"token": token}
+		data := testutils.TestRequestData{"token": generateToken(email, true)}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 
-		const responseMesaage = "Activation token is invalid"
-		assert.Equal(t, responseMesaage, response.GetMessage())
+		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Activation token is invalid", response.GetMessage())
 	})
 
 	t.Run("should not activate already active user", func(t *testing.T) {
 		testUserData := createTestUser(true)
-		token, err := utils.GenerateToken(testUserData.Email, []byte(appItems.App.Config.SecretKey))
-		if err != nil {
-			t.Fatal("failed to generate test token to activate a user")
-		}
 
-		data := testutils.TestRequestData{"token": token}
+		data := testutils.TestRequestData{"token": generateToken(testUserData.Email, true)}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 
-		const responseMesaage = "Activation token is invalid"
-		assert.Equal(t, responseMesaage, response.GetMessage())
+		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Activation token is invalid", response.GetMessage())
 	})
 
 	t.Run("should not activate deactivated user", func(t *testing.T) {
 		testUserData := createDeactivatedUser()
-		token, err := utils.GenerateToken(testUserData.Email, []byte(appItems.App.Config.SecretKey))
-		if err != nil {
-			t.Fatal("failed to generate test token to activate a user")
-		}
 
-		data := testutils.TestRequestData{"token": token}
+		data := testutils.TestRequestData{"token": generateToken(testUserData.Email, true)}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 
-		const responseMesaage = "Activation token is invalid"
-		assert.Equal(t, responseMesaage, response.GetMessage())
+		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Activation token is invalid", response.GetMessage())
 	})
 }

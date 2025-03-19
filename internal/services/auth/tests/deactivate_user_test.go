@@ -59,14 +59,12 @@ func TestDeactivateUser(t *testing.T) {
 		adminTestUser := createTestUser(true, models.UserAdminRole)
 		testUser := createTestUser(true, models.UserClientRole)
 
-		token := generateToken(adminTestUser.ID, true)
-		endpoint := testEndpoint(testUser.ID)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
-
-		response, err := testutils.RunTestRequest(mux, testMethod, endpoint, headers, nil)
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(adminTestUser.ID, true)}
+		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint(testUser.ID), headers, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		assert.Equal(t, http.StatusOK, response.StatusCode())
 		assert.Equal(t, "Done", response.GetMessage())
 	})
@@ -75,14 +73,12 @@ func TestDeactivateUser(t *testing.T) {
 		clientTestUser := createTestUser(true, models.UserClientRole)
 		testUser := createTestUser(true, models.UserClientRole)
 
-		token := generateToken(clientTestUser.ID, true)
-		endpoint := testEndpoint(testUser.ID)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
-
-		response, err := testutils.RunTestRequest(mux, testMethod, endpoint, headers, nil)
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(clientTestUser.ID, true)}
+		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint(testUser.ID), headers, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		assert.Equal(t, http.StatusForbidden, response.StatusCode())
 		assert.Equal(t, "forbidden", response.GetMessage())
 	})
@@ -90,25 +86,23 @@ func TestDeactivateUser(t *testing.T) {
 	t.Run("should not deactivate user invalid user ID", func(t *testing.T) {
 		staffTestUser := createTestUser(true, models.UserStaffRole)
 
-		token := generateToken(staffTestUser.ID, true)
-		endpoint := testEndpoint(0)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
-
-		response, err := testutils.RunTestRequest(mux, testMethod, endpoint, headers, nil)
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(staffTestUser.ID, true)}
+		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint(0), headers, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		const errorMessage = "Invalid user ID"
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 		assert.Equal(t, errorMessage, response.GetMessage())
 
 		// string id
-		endpoint = "/v1/auth/users/someID/deactivate"
-
+		endpoint := "/v1/auth/users/someID/deactivate"
 		response, err = testutils.RunTestRequest(mux, testMethod, endpoint, headers, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
 		assert.Equal(t, errorMessage, response.GetMessage())
 	})
@@ -117,16 +111,13 @@ func TestDeactivateUser(t *testing.T) {
 		staffTestUser := createTestUser(true, models.UserStaffRole)
 		testUser := createDeactivatedUser(models.UserClientRole)
 
-		token := generateToken(staffTestUser.ID, true)
-		endpoint := testEndpoint(testUser.ID)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
-
-		response, err := testutils.RunTestRequest(mux, testMethod, endpoint, headers, nil)
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(staffTestUser.ID, true)}
+		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint(testUser.ID), headers, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
-		const errorMessage = "User is already deactivated"
+
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-		assert.Equal(t, errorMessage, response.GetMessage())
+		assert.Equal(t, "User is already deactivated", response.GetMessage())
 	})
 }

@@ -113,7 +113,7 @@ func HasOrgPermission(permissions []string, appStore store.Store, cacheStore cac
 			}
 		}
 
-		if !hasPermission && len(permissions) > 0 {
+		if !hasPermission {
 			err := errors.New("user does not have permissions to perform action")
 			response.ErrorResponseForbidden(w, r, err)
 			return

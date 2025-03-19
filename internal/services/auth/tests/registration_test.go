@@ -33,16 +33,19 @@ func TestUserRegistration(t *testing.T) {
 		return testUserData
 	}
 
-	t.Run("should create user", func(t *testing.T) {
+	generateRequestData := func() testutils.TestRequestData {
 		email, username := testutils.GenerateEmailAndUsername()
-		data := testutils.TestRequestData{
+		return testutils.TestRequestData{
 			"email":       email,
 			"password":    testutils.TestPassword,
 			"username":    username,
 			"profilePic":  testutils.TestProfilePic,
 			"dateOfBirth": testutils.GenerateDate(),
 		}
+	}
 
+	t.Run("should create user", func(t *testing.T) {
+		data := generateRequestData()
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
@@ -55,212 +58,118 @@ func TestUserRegistration(t *testing.T) {
 		testUserData := createTestUser(true)
 		_, newUsername := testutils.GenerateEmailAndUsername()
 
-		data := testutils.TestRequestData{
-			"email":       testUserData.Email,
-			"password":    testUserData.Password,
-			"username":    newUsername,
-			"profilePic":  testutils.TestProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
-		}
+		data := generateRequestData()
+		data["email"] = testUserData.Email
+		data["username"] = newUsername
 
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid request body", response.GetMessage())
 
 		errorMessages, ok := response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		var emailErrorMessage = "an account is already attached to that email address"
-		var responseMessage = "Invalid request body"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, emailErrorMessage, errorMessages["email"])
+		assert.Equal(t, "an account is already attached to that email address", errorMessages["email"])
 	})
 
 	t.Run("should not create user with same username twice", func(t *testing.T) {
 		testUserData := createTestUser(true)
 		newEmail, _ := testutils.GenerateEmailAndUsername()
 
-		data := testutils.TestRequestData{
-			"email":       newEmail,
-			"password":    testUserData.Password,
-			"username":    testUserData.Username,
-			"profilePic":  testutils.TestProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
-		}
+		data := generateRequestData()
+		data["email"] = newEmail
+		data["username"] = testUserData.Username
 
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid request body", response.GetMessage())
 
 		errorMessages, ok := response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		var usernameErrorMessage = "username is already taken"
-		var responseMessage = "Invalid request body"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, usernameErrorMessage, errorMessages["username"])
+		assert.Equal(t, "username is already taken", errorMessages["username"])
 	})
 
 	t.Run("should not create user invalid date of birth", func(t *testing.T) {
-		email, username := testutils.GenerateEmailAndUsername()
-		data := testutils.TestRequestData{
-			"email":       email,
-			"password":    testutils.TestPassword,
-			"username":    username,
-			"profilePic":  testutils.TestProfilePic,
-			"dateOfBirth": "21/08/1997",
-		}
+		data := generateRequestData()
+		data["dateOfBirth"] = "21/08/1997"
 
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
 		if err != nil {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid request body", response.GetMessage())
 
 		errorMessages, ok := response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		var errorMessage string = "Invalid date format. mm/dd/yyyy"
-		var responseMessage = "Invalid request body"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["dateOfBirth"])
+		assert.Equal(t, "Invalid date format. mm/dd/yyyy", errorMessages["dateOfBirth"])
 	})
 
 	t.Run("should not create user invalid password", func(t *testing.T) {
-		email, username := testutils.GenerateEmailAndUsername()
-		data := testutils.TestRequestData{
-			"email":       email,
-			"password":    "simple",
-			"username":    username,
-			"profilePic":  testutils.TestProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
+		invalidPasswordError := "Password must contain a number, lower case character, upper case character and one of the special symbols(including space) !@#$%^&*()-_+=,.?|\\/<>[]{}"
+		invalidPasswords := []map[string]string{
+			{
+				"password":     "simple",
+				"errorMessage": "Password must have at least 10 characters",
+			},
+			{
+				"password":     "60ksenB!PZcp*gYucryJmsfsky@A%jtr4$$1hLXzD@^Xcavuj6$*3iKb^YVdRFVynvGprXalw",
+				"errorMessage": "Password must have at most 72 characters",
+			},
+			{
+				"password":     "n3w_p@ssw0rd", // Missing uppercase character
+				"errorMessage": invalidPasswordError,
+			},
+			{
+				"password":     "N3W_P@SSW0RD", // Missing lowercase character
+				"errorMessage": invalidPasswordError,
+			},
+			{
+				"password":     "NeW_P@SSWoRD", // Missing number character
+				"errorMessage": invalidPasswordError,
+			},
+			{
+				"password":     "N3WPaSSW0RD", // Missing special character
+				"errorMessage": invalidPasswordError,
+			},
 		}
 
-		// Password less than 10 characters
-		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
-		if err != nil {
-			t.Fatal(err)
+		data := generateRequestData()
+		for _, invalidPassword := range invalidPasswords {
+			data["password"] = invalidPassword["password"]
+			response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+			assert.Equal(t, "Invalid request body", response.GetMessage())
+
+			errorMessages, ok := response.GetErrorMessages()
+			if !ok {
+				t.Fatal("failed to convert response errors to map")
+			}
+
+			assert.Equal(t, invalidPassword["errorMessage"], errorMessages["password"])
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok := response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-
-		var errorMessage string = "Password must have at least 10 characters"
-		var responseMessage = "Invalid request body"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["password"])
-
-		// Password more than 72 characters
-		var veryLongPassword string
-		for range 73 {
-			veryLongPassword += "i"
-		}
-
-		data["password"] = veryLongPassword
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok = response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-
-		errorMessage = "Password must have at most 72 characters"
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["password"])
-
-		// Password missing upper case character
-		data["password"] = "n3w_p@ssw0rd"
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok = response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-
-		errorMessage = "Password must contain a number, lower case character, upper case character and one of the special symbols(including space) !@#$%^&*()-_+=,.?|\\/<>[]{}"
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["password"])
-
-		// Password missing lower case character
-		data["password"] = "N3W_P@SSW0RD"
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok = response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["password"])
-
-		// Password missing number character
-		data["password"] = "NeW_P@SSWoRD"
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok = response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["password"])
-
-		// Password missing special character
-		data["password"] = "N3WPaSSW0RD"
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok = response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["password"])
 	})
 
 	t.Run("should not create user invalid email", func(t *testing.T) {
-		_, username := testutils.GenerateEmailAndUsername()
-		data := testutils.TestRequestData{
-			"email":       "sixemail.com",
-			"password":    testutils.TestPassword,
-			"username":    username,
-			"profilePic":  testutils.TestProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
-		}
+		data := generateRequestData()
+		data["email"] = "sixemail.com"
 
 		// Invalid email
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
@@ -268,17 +177,14 @@ func TestUserRegistration(t *testing.T) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid request body", response.GetMessage())
 
 		errorMessages, ok := response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		var errorMessage = "Invalid email address provided"
-		var responseMessage = "Invalid request body"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["email"])
+		assert.Equal(t, "Invalid email address provided", errorMessages["email"])
 
 		// Email field missing
 		delete(data, "email")
@@ -287,26 +193,19 @@ func TestUserRegistration(t *testing.T) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid request body", response.GetMessage())
 
 		errorMessages, ok = response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		errorMessage = "Field is required"
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["email"])
+		assert.Equal(t, "Field is required", errorMessages["email"])
 	})
 
 	t.Run("should not create user with invalid profile pic", func(t *testing.T) {
-		email, username := testutils.GenerateEmailAndUsername()
-		data := testutils.TestRequestData{
-			"email":       email,
-			"password":    testutils.TestPassword,
-			"username":    username,
-			"profilePic":  "/fake/image.png",
-			"dateOfBirth": testutils.GenerateDate(),
-		}
+		data := generateRequestData()
+		data["profilePic"] = "/fake/image.png"
 
 		// Invalid email
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, data)
@@ -314,16 +213,13 @@ func TestUserRegistration(t *testing.T) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+		assert.Equal(t, "Invalid request body", response.GetMessage())
 
 		errorMessages, ok := response.GetErrorMessages()
 		if !ok {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		var errorMessage = "Invalid URL format"
-		var responseMessage = "Invalid request body"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["profilePic"])
+		assert.Equal(t, "Invalid URL format", errorMessages["profilePic"])
 	})
 }
