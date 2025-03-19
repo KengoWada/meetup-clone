@@ -66,6 +66,16 @@ definitions:
     - password
     - token
     type: object
+  members.inviteMemberPayload:
+    properties:
+      email:
+        type: string
+      roleId:
+        type: integer
+    required:
+    - email
+    - roleId
+    type: object
   models.SimpleOrganization:
     properties:
       description:
@@ -226,11 +236,17 @@ definitions:
       description:
         type: string
       name:
+        maxLength: 100
         type: string
       permissions:
         items:
           type: string
         type: array
+        uniqueItems: true
+    required:
+    - description
+    - name
+    - permissions
     type: object
 info:
   contact:
@@ -698,6 +714,51 @@ paths:
       summary: Update an organization
       tags:
       - organizations
+  /organizations/{orgID}/members:
+    post:
+      consumes:
+      - application/json
+      description: Invite an organization member
+      parameters:
+      - description: orgID to update
+        in: path
+        name: orgID
+        required: true
+        type: integer
+      - description: invite organization member payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/members.inviteMemberPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: invite sent successfully
+          schema:
+            $ref: '#/definitions/response.DocsResponseMessageOnly'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseUnauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseForbidden'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.DocsErrorResponseInternalServerErr'
+      security:
+      - ApiKeyAuth: []
+      summary: Invite an organization member
+      tags:
+      - members
   /organizations/{orgID}/roles:
     get:
       consumes:

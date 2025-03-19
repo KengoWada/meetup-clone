@@ -724,6 +724,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/organizations/{orgID}/members": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Invite an organization member",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "members"
+                ],
+                "summary": "Invite an organization member",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "orgID to update",
+                        "name": "orgID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "invite organization member payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/members.inviteMemberPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "invite sent successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsResponseMessageOnly"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseUnauthorized"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseForbidden"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.DocsErrorResponseInternalServerErr"
+                        }
+                    }
+                }
+            }
+        },
         "/organizations/{orgID}/roles": {
             "get": {
                 "security": [
@@ -1273,6 +1343,21 @@ const docTemplate = `{
                 }
             }
         },
+        "members.inviteMemberPayload": {
+            "type": "object",
+            "required": [
+                "email",
+                "roleId"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "roleId": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.SimpleOrganization": {
             "type": "object",
             "properties": {
@@ -1506,15 +1591,22 @@ const docTemplate = `{
         },
         "roles.updateRolePayload": {
             "type": "object",
+            "required": [
+                "description",
+                "name",
+                "permissions"
+            ],
             "properties": {
                 "description": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "permissions": {
                     "type": "array",
+                    "uniqueItems": true,
                     "items": {
                         "type": "string"
                     }

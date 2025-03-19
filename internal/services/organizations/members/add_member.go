@@ -18,6 +18,22 @@ type inviteMemberPayload struct {
 	RoleID int64            `json:"roleId" validate:"required"`
 }
 
+// InviteOrganizationMember godoc
+//
+//	@Summary		Invite an organization member
+//	@Description	Invite an organization member
+//	@Tags			members
+//	@Accept			json
+//	@Produce		json
+//	@Param			orgID	path		int									true	"orgID to update"
+//	@Param			payload	body		inviteMemberPayload					true	"invite organization member payload"
+//	@Success		201		{object}	response.DocsResponseMessageOnly	"invite sent successfully"
+//	@Failure		400		{object}	response.DocsErrorResponse
+//	@Failure		401		{object}	response.DocsErrorResponseUnauthorized
+//	@Failure		403		{object}	response.DocsErrorResponseForbidden
+//	@Failure		500		{object}	response.DocsErrorResponseInternalServerErr
+//	@Security		ApiKeyAuth
+//	@Router			/organizations/{orgID}/members [post]
 func (h *Handler) inviteMember(w http.ResponseWriter, r *http.Request) {
 	var payload inviteMemberPayload
 	if err := utils.ReadJSON(w, r, &payload); err != nil {
