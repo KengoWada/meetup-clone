@@ -53,6 +53,10 @@ type Store struct {
 		Create(ctx context.Context, member *models.OrganizationMember) error
 		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.OrganizationMember, error)
 	}
+	OrganizationInvites interface {
+		Create(ctx context.Context, invite *models.OrganizationInvite) error
+		Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.OrganizationInvite, error)
+	}
 }
 
 func NewStore(db *sql.DB) Store {
@@ -61,6 +65,7 @@ func NewStore(db *sql.DB) Store {
 		Organizations:       &OrganizationStore{db},
 		Roles:               &RoleStore{db},
 		OrganizationMembers: &OrganizationMembersStore{db},
+		OrganizationInvites: &OrganizationInviteStore{db},
 	}
 }
 

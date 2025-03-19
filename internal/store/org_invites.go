@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/KengoWada/meetup-clone/internal/models"
 )
@@ -41,4 +42,35 @@ func (s *OrganizationInviteStore) Create(ctx context.Context, invite *models.Org
 	}
 
 	return nil
+}
+
+func (s *OrganizationInviteStore) Get(ctx context.Context, isDeleted bool, fields []string, values []any) (*models.OrganizationInvite, error) {
+	query := fmt.Sprintf("SELECT * FROM organization_invites WHERE %s ORDER BY created_at ASC", generateQueryConditions(isDeleted, fields))
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	var invite = models.OrganizationInvite{}
+	err := s.db.QueryRowContext(ctx, query, values...).Scan(
+		&invite.ID,
+		&invite.OrganizationID,
+		&invite.UserProfileID,
+		&invite.RoleID,
+		&invite.AcceptedAt,
+		&invite.DeclinedAt,
+		&invite.Version,
+		&invite.CreatedAt,
+		&invite.UpdatedAt,
+		&invite.DeletedAt,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &invite, nil
 }
