@@ -34,6 +34,16 @@ func TestUpdateUserProfile(t *testing.T) {
 		return user
 	}
 
+	generateData := func() testutils.TestRequestData {
+		email, username := testutils.GenerateEmailAndUsername()
+		return testutils.TestRequestData{
+			"email":       email,
+			"username":    username,
+			"profilePic":  testutils.TestProfilePic,
+			"dateOfBirth": testutils.GenerateDate(),
+		}
+	}
+
 	generateToken := func(ID int64, isValid bool) string {
 		token, err := testutils.GenerateTesAuthToken(appItems.App.Authenticator, appItems.App.Config.AuthConfig, isValid, ID)
 		if err != nil {
@@ -45,16 +55,9 @@ func TestUpdateUserProfile(t *testing.T) {
 
 	t.Run("should update user details", func(t *testing.T) {
 		testUser := createTestUser(true)
-		token := generateToken(testUser.ID, true)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
 
-		email, username := testutils.GenerateEmailAndUsername()
-		payload := testutils.TestRequestData{
-			"email":       email,
-			"username":    username,
-			"profilePic":  testUser.UserProfile.ProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
-		}
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, true)}
+		payload := generateData()
 
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, payload)
 		if err != nil {
@@ -67,48 +70,30 @@ func TestUpdateUserProfile(t *testing.T) {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		respEmail, ok := data["email"]
-		assert.True(t, ok)
-		assert.Equal(t, email, respEmail)
-
-		respUsername, ok := data["username"]
-		assert.True(t, ok)
-		assert.Equal(t, username, respUsername)
+		assert.Equal(t, payload["email"], data["email"])
+		assert.Equal(t, payload["username"], data["username"])
 	})
 
-	t.Run("should not update user with no auth token", func(t *testing.T) {
-		testUser := createTestUser(true)
+	t.Run("should not update user when not authenticated", func(t *testing.T) {
+		createTestUser(true)
 
-		email, username := testutils.GenerateEmailAndUsername()
-		payload := testutils.TestRequestData{
-			"email":       email,
-			"username":    username,
-			"profilePic":  testUser.UserProfile.ProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
-		}
-
+		payload := generateData()
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, nil, payload)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		assert.Equal(t, http.StatusUnauthorized, response.StatusCode())
 		assert.Equal(t, "unauthorized", response.GetMessage())
 	})
 
 	t.Run("should not update user extra fields in request", func(t *testing.T) {
 		testUser := createTestUser(true)
-		token := generateToken(testUser.ID, true)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
 
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, true)}
 		unknownField := "unknownField"
-		email, username := testutils.GenerateEmailAndUsername()
-		payload := testutils.TestRequestData{
-			"email":       email,
-			"username":    username,
-			"profilePic":  testUser.UserProfile.ProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
-			unknownField:  "fakeData",
-		}
+		payload := generateData()
+		payload[unknownField] = "fakeData"
 
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, payload)
 		if err != nil {
@@ -121,109 +106,55 @@ func TestUpdateUserProfile(t *testing.T) {
 			t.Fatal("failed to convert response errors to map")
 		}
 
-		const responseMessage = "Unknown field in request"
-		const unknownFieldErr = "unknown field"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, unknownFieldErr, errorMessages[unknownField])
+		assert.Equal(t, "Unknown field in request", response.GetMessage())
+		assert.Equal(t, "unknown field", errorMessages[unknownField])
 	})
 
 	t.Run("should not update user with invalid fields", func(t *testing.T) {
 		testUser := createTestUser(true)
-		token := generateToken(testUser.ID, true)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
 
-		payload := testutils.TestRequestData{
-			"email":       "fakeemail.com",
-			"username":    testUser.UserProfile.Username,
-			"profilePic":  testUser.UserProfile.ProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
+		invalidTestData := []map[string]string{
+			{
+				"field":        "email",
+				"value":        "fakeemail.com",
+				"errorMessage": "Invalid email address provided",
+			},
+			{
+				"field":        "username",
+				"value":        "we",
+				"errorMessage": "Username must have at least 3 characters",
+			},
+			{
+				"field":        "profilePic",
+				"value":        "/home/local/img.png",
+				"errorMessage": "Invalid URL format",
+			},
+			{
+				"field":        "dateOfBirth",
+				"value":        "23/01/1432",
+				"errorMessage": "Invalid date format. mm/dd/yyyy",
+			},
 		}
 
-		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, payload)
-		if err != nil {
-			t.Fatal(err)
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, true)}
+		for _, invalidData := range invalidTestData {
+			payload := generateData()
+			field := invalidData["field"]
+			payload[field] = invalidData["value"]
+
+			response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, http.StatusBadRequest, response.StatusCode())
+			assert.Equal(t, "Invalid request body", response.GetMessage())
+
+			errorMessages, ok := response.GetErrorMessages()
+			if !ok {
+				t.Fatal("failed to convert response errors to map")
+			}
+
+			assert.Equal(t, invalidData["errorMessage"], errorMessages[field])
 		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok := response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-
-		const responseMessage = "Invalid request body"
-		var errorMessage = "Invalid email address provided"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["email"])
-
-		// Invalid username
-		payload = testutils.TestRequestData{
-			"email":       testUser.Email,
-			"username":    "we",
-			"profilePic":  testUser.UserProfile.ProfilePic,
-			"dateOfBirth": testutils.GenerateDate(),
-		}
-
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, payload)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok = response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-		errorMessage = "Username must have at least 3 characters"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["username"])
-
-		// Invalid profile pic url
-		payload = testutils.TestRequestData{
-			"email":       testUser.Email,
-			"username":    testUser.UserProfile.Username,
-			"profilePic":  "/home/local/img.png",
-			"dateOfBirth": testutils.GenerateDate(),
-		}
-
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, payload)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok = response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-		errorMessage = "Invalid URL format"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["profilePic"])
-
-		// Invalid date fornat
-		payload = testutils.TestRequestData{
-			"email":       testUser.Email,
-			"username":    testUser.UserProfile.Username,
-			"profilePic":  testUser.UserProfile.ProfilePic,
-			"dateOfBirth": "23/01/1432",
-		}
-
-		response, err = testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, payload)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode())
-
-		errorMessages, ok = response.GetErrorMessages()
-		if !ok {
-			t.Fatal("failed to convert response errors to map")
-		}
-		errorMessage = "Invalid date format. mm/dd/yyyy"
-
-		assert.Equal(t, responseMessage, response.GetMessage())
-		assert.Equal(t, errorMessage, errorMessages["dateOfBirth"])
 	})
 }

@@ -82,15 +82,14 @@ func TestGetUserProfile(t *testing.T) {
 
 	t.Run("should not fetch details for deactivated user", func(t *testing.T) {
 		testUser := createDeactivatedUser()
-		token := generateToken(testUser.ID, true)
-		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + token}
 
+		headers := testutils.TestRequestHeaders{"Authorization": "Bearer " + generateToken(testUser.ID, true)}
 		response, err := testutils.RunTestRequest(mux, testMethod, testEndpoint, headers, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		assert.Equal(t, http.StatusUnauthorized, response.StatusCode())
-		const responseMessage = "unauthorized"
-		assert.Equal(t, responseMessage, response.GetMessage())
+		assert.Equal(t, "unauthorized", response.GetMessage())
 	})
 }
